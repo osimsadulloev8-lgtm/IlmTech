@@ -972,10 +972,10 @@ export default function App() {
   ════════════════════════════════════════════════════════════════════════ */
   if (loading) {
     return (
-      <div className="w-full h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-4">
+      <div className="w-full h-screen bg-white text-gray-900 flex flex-col items-center justify-center gap-4">
         <div className="text-6xl animate-pulse">⚡</div>
-        <p className="text-purple-300 font-bold">Подключение к серверу IlmTech...</p>
-        <p className="text-slate-500 text-xs">Если долго — проверь интернет</p>
+        <p className="text-emerald-600 font-bold">Подключение к серверу IlmTech...</p>
+        <p className="text-gray-400 text-xs">Если долго — проверь интернет</p>
       </div>
     );
   }
@@ -985,24 +985,24 @@ export default function App() {
   ════════════════════════════════════════════════════════════════════════ */
   if (!currentUser) {
     return (
-      <div className="relative w-full min-h-screen bg-slate-950 text-white flex items-center justify-center p-4 overflow-hidden">
-        <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-purple-600/30 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-pink-600/30 blur-3xl" />
+      <div className="relative w-full min-h-screen bg-white text-gray-900 flex items-center justify-center p-4 overflow-hidden">
+        <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-emerald-200 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-red-500/30 blur-3xl" />
 
-        <div className="relative z-10 w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-purple-500/30 rounded-3xl p-8 shadow-2xl">
+        <div className="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-xl border border-emerald-200 rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-7">
-            <div className="text-6xl mb-2 drop-shadow-lg">⚡</div>
-            <h1 className="text-3xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">IlmTech TJ</h1>
-            <p className="text-slate-400 text-sm mt-1">Маркетплейс Таджикистана</p>
+            <div className="text-6xl mb-2">⚡</div>
+            <h1 className="text-3xl font-black bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">IlmTech TJ</h1>
+            <p className="text-gray-500 text-sm mt-1">Маркетплейс Таджикистана</p>
             <p className="text-green-400 text-xs mt-1">{connected ? "🟢 Подключено к серверу" : "🔴 Нет связи"}</p>
           </div>
 
           {authView === "welcome" && (
             <div className="space-y-3">
-              <button onClick={() => { setAuthView("login"); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-lg shadow-lg active:scale-95 transition">Войти</button>
-              <button onClick={() => { setAuthView("register"); setAuthStep(1); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-slate-800 border border-purple-500/40 font-bold text-lg active:scale-95 transition">Зарегистрироваться</button>
+              <button onClick={() => { setAuthView("login"); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">Войти</button>
+              <button onClick={() => { setAuthView("register"); setAuthStep(1); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gray-100 border border-emerald-300 font-bold text-lg active:scale-95 transition">Зарегистрироваться</button>
               {knownAccounts.length > 0 && (
-                <button onClick={() => setAuthView("accounts")} className="w-full py-3 rounded-2xl bg-slate-800/60 border border-slate-700 font-bold text-sm active:scale-95 transition">🔄 Мои аккаунты ({knownAccounts.length})</button>
+                <button onClick={() => setAuthView("accounts")} className="w-full py-3 rounded-2xl bg-gray-100 border border-gray-300 font-bold text-sm active:scale-95 transition">🔄 Мои аккаунты ({knownAccounts.length})</button>
               )}
             </div>
           )}
@@ -1010,57 +1010,57 @@ export default function App() {
           {authView === "accounts" && (
             <div className="space-y-3">
               <h2 className="text-xl font-bold mb-2">🔄 Мои аккаунты</h2>
-              <p className="text-slate-400 text-xs mb-2">Аккаунты, в которые ты входил на этом устройстве.</p>
-              {knownAccounts.length === 0 && <p className="text-slate-500 text-sm text-center py-4">Пока нет сохранённых аккаунтов</p>}
+              <p className="text-gray-500 text-xs mb-2">Аккаунты, в которые ты входил на этом устройстве.</p>
+              {knownAccounts.length === 0 && <p className="text-gray-400 text-sm text-center py-4">Пока нет сохранённых аккаунтов</p>}
               {knownAccounts.map((u) => (
-                <button key={u.id} onClick={() => switchTo(u.id)} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-slate-800 border border-slate-700 active:scale-95 transition text-left">
+                <button key={u.id} onClick={() => switchTo(u.id)} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gray-100 border border-gray-300 active:scale-95 transition text-left">
                   <AvatarView user={u} size={44} />
                   <div className="flex-1 min-w-0">
                     <div className="font-bold truncate">{u.nickname}</div>
-                    <div className="text-xs text-slate-400">{u.role === "seller" ? "🏪 Продавец" : "🛒 Покупатель"} · {u.id}</div>
+                    <div className="text-xs text-gray-500">{u.role === "seller" ? "🏪 Продавец" : "🛒 Покупатель"} · {u.id}</div>
                   </div>
-                  <span className="text-purple-400 text-sm">Войти →</span>
+                  <span className="text-emerald-600 text-sm">Войти →</span>
                 </button>
               ))}
-              <button onClick={() => setAuthView("welcome")} className="w-full py-2 text-slate-400 text-sm">← Назад</button>
+              <button onClick={() => setAuthView("welcome")} className="w-full py-2 text-gray-500 text-sm">← Назад</button>
             </div>
           )}
 
           {authView === "login" && (
             <div className="space-y-3">
               <h2 className="text-xl font-bold mb-2">Вход</h2>
-              <input value={loginNick} onChange={(e) => setLoginNick(e.target.value)} placeholder="👤 Никнейм" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              <input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doLogin()} placeholder="🔒 Пароль" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              {authErr && <p className="text-pink-400 text-sm">{authErr}</p>}
-              <button onClick={doLogin} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "..." : "Войти →"}</button>
-              <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-slate-400 text-sm">← Назад</button>
+              <input value={loginNick} onChange={(e) => setLoginNick(e.target.value)} placeholder="👤 Никнейм" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doLogin()} placeholder="🔒 Пароль" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
+              <button onClick={doLogin} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "..." : "Войти →"}</button>
+              <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-gray-500 text-sm">← Назад</button>
             </div>
           )}
 
           {authView === "register" && authStep === 1 && (
             <div className="space-y-3">
               <h2 className="text-xl font-bold mb-2">Регистрация · Шаг 1</h2>
-              <input value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="📧 Почта (name@mail.com)" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              <input value={authNick} onChange={(e) => setAuthNick(e.target.value)} placeholder="👤 Никнейм" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              <input type="password" value={authPass} onChange={(e) => setAuthPass(e.target.value)} placeholder="🔒 Пароль (мин. 4)" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              <input type="password" value={authPass2} onChange={(e) => setAuthPass2(e.target.value)} placeholder="🔒 Повторите пароль" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              {authErr && <p className="text-pink-400 text-sm">{authErr}</p>}
-              <button onClick={regStep1} className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold shadow-lg active:scale-95 transition">Далее →</button>
-              <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-slate-400 text-sm">← Назад</button>
+              <input value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="📧 Почта (name@mail.com)" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input value={authNick} onChange={(e) => setAuthNick(e.target.value)} placeholder="👤 Никнейм" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input type="password" value={authPass} onChange={(e) => setAuthPass(e.target.value)} placeholder="🔒 Пароль (мин. 4)" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input type="password" value={authPass2} onChange={(e) => setAuthPass2(e.target.value)} placeholder="🔒 Повторите пароль" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
+              <button onClick={regStep1} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition">Далее →</button>
+              <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-gray-500 text-sm">← Назад</button>
             </div>
           )}
 
           {authView === "register" && authStep === 2 && (
             <div className="space-y-3">
               <h2 className="text-xl font-bold mb-2">Регистрация · Шаг 2</h2>
-              <p className="text-slate-400 text-sm">Выберите роль:</p>
+              <p className="text-gray-500 text-sm">Выберите роль:</p>
               <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => setAuthRole("buyer")} className={`py-6 rounded-2xl border-2 font-bold transition ${authRole === "buyer" ? "border-purple-500 bg-purple-600/20" : "border-slate-700 bg-slate-800"}`}><div className="text-3xl mb-1">🛒</div>Покупатель</button>
-                <button onClick={() => setAuthRole("seller")} className={`py-6 rounded-2xl border-2 font-bold transition ${authRole === "seller" ? "border-pink-500 bg-pink-600/20" : "border-slate-700 bg-slate-800"}`}><div className="text-3xl mb-1">🏪</div>Продавец</button>
+                <button onClick={() => setAuthRole("buyer")} className={`py-6 rounded-2xl border-2 font-bold transition ${authRole === "buyer" ? "border-emerald-500 bg-emerald-100" : "border-gray-300 bg-gray-100"}`}><div className="text-3xl mb-1">🛒</div>Покупатель</button>
+                <button onClick={() => setAuthRole("seller")} className={`py-6 rounded-2xl border-2 font-bold transition ${authRole === "seller" ? "border-red-400 bg-red-100" : "border-gray-300 bg-gray-100"}`}><div className="text-3xl mb-1">🏪</div>Продавец</button>
               </div>
-              {authErr && <p className="text-pink-400 text-sm">{authErr}</p>}
-              <button onClick={finishRegister} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "Создаём..." : "Создать аккаунт ✓"}</button>
-              <button onClick={() => setAuthStep(1)} className="w-full py-2 text-slate-400 text-sm">← Назад</button>
+              {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
+              <button onClick={finishRegister} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "Создаём..." : "Создать аккаунт ✓"}</button>
+              <button onClick={() => setAuthStep(1)} className="w-full py-2 text-gray-500 text-sm">← Назад</button>
             </div>
           )}
         </div>
@@ -1075,17 +1075,17 @@ export default function App() {
   const isSeller = currentUser.role === "seller";
 
   return (
-    <div className="relative w-full h-screen flex flex-col bg-gradient-to-b from-slate-950 to-slate-900 text-white overflow-hidden">
-      <div className="pointer-events-none absolute -top-40 -left-40 w-96 h-96 rounded-full bg-purple-600/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-pink-600/20 blur-3xl" />
+    <div className="relative w-full h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white text-gray-900 overflow-hidden">
+      <div className="pointer-events-none absolute -top-40 -left-40 w-96 h-96 rounded-full bg-emerald-100 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-red-100 blur-3xl" />
 
-      <header className="relative z-10 shrink-0 flex items-center justify-between px-4 py-3 bg-slate-950/80 backdrop-blur-xl border-b border-purple-500/20">
+      <header className="relative z-10 shrink-0 flex items-center justify-between px-4 py-3 bg-white/80 backdrop-blur-xl border-b border-emerald-100">
         <div className="flex items-center gap-2">
-          <span className="text-2xl drop-shadow-lg">⚡</span>
-          <span className="font-black text-lg bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">IlmTech</span>
+          <span className="text-2xl">⚡</span>
+          <span className="font-black text-lg bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">IlmTech</span>
         </div>
         <div className="flex items-center gap-2">
-          {isSeller && <button onClick={() => setScreen("add")} className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-sm font-bold shadow-md active:scale-95 transition">➕ Подать</button>}
+          {isSeller && <button onClick={() => setScreen("add")} className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm font-bold shadow-md active:scale-95 transition">➕ Подать</button>}
           <button onClick={() => setScreen("profile")} className="active:scale-90 transition"><AvatarView user={currentUser} size={34} /></button>
         </div>
       </header>
@@ -1093,16 +1093,16 @@ export default function App() {
       <main className="relative z-10 flex-1 min-h-0 overflow-hidden">
         {screen === "home" && (
           <div className="h-full overflow-y-auto p-4 space-y-4">
-            <div className="rounded-3xl bg-gradient-to-r from-purple-600 to-pink-600 p-6 shadow-lg relative overflow-hidden">
+            <div className="rounded-3xl bg-gradient-to-r from-emerald-500 to-green-500 text-white p-6 shadow-xl relative overflow-hidden">
               <div className="absolute -right-4 -top-4 text-7xl opacity-20">⚡</div>
               <h2 className="text-2xl font-black leading-tight relative">Найди. Продай. Купи.</h2>
-              <p className="text-white/80 relative">Всё на IlmTech ⚡</p>
+              <p className="text-gray-900/80 relative">Всё на IlmTech ⚡</p>
             </div>
 
             <div className="flex flex-wrap gap-2">
               {CATEGORIES.map((c) => (
                 <button key={c.key} onClick={() => setCategory(c.key)} style={{ width: 60, height: 60 }}
-                  className={`flex flex-col items-center justify-center rounded-xl border font-medium transition active:scale-90 shrink-0 ${category === c.key ? "bg-gradient-to-br from-purple-600 to-pink-600 border-purple-400" : "bg-slate-900 border-slate-800"}`}>
+                  className={`flex flex-col items-center justify-center rounded-xl border font-medium transition active:scale-90 shrink-0 ${category === c.key ? "bg-gradient-to-br from-emerald-500 to-green-500 border-emerald-400" : "bg-white border-gray-200"}`}>
                   <span className="text-lg">{c.emoji}</span>
                   <span className="leading-none mt-0.5 text-center px-0.5" style={{ fontSize: "9px" }}>{c.key}</span>
                 </button>
@@ -1110,12 +1110,12 @@ export default function App() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-slate-400 text-sm">{homeProducts.length} объявлений</span>
-              <button onClick={() => setSortMode(sortMode === "new" ? "asc" : sortMode === "asc" ? "desc" : "new")} className="px-3 py-1.5 rounded-xl bg-slate-800 text-sm border border-slate-700">{sortMode === "new" ? "Новые" : sortMode === "asc" ? "Цена ↑" : "Цена ↓"}</button>
+              <span className="text-gray-500 text-sm">{homeProducts.length} объявлений</span>
+              <button onClick={() => setSortMode(sortMode === "new" ? "asc" : sortMode === "asc" ? "desc" : "new")} className="px-3 py-1.5 rounded-xl bg-gray-100 text-sm border border-gray-300">{sortMode === "new" ? "Новые" : sortMode === "asc" ? "Цена ↑" : "Цена ↓"}</button>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {homeProducts.length === 0 && <p className="col-span-full text-center text-slate-500 py-10">Объявлений пока нет. Будь первым! 🚀</p>}
+              {homeProducts.length === 0 && <p className="col-span-full text-center text-gray-400 py-10">Объявлений пока нет. Будь первым! 🚀</p>}
               {homeProducts.map((p) => <ProductCard key={p.id} p={p} fav={favorites.includes(p.id)} mine={p.sellerId === currentUser.id} onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} />)}
             </div>
           </div>
@@ -1124,13 +1124,13 @@ export default function App() {
         {screen === "search" && (
           <div className="h-full overflow-y-auto p-4 space-y-3">
             <h2 className="text-xl font-bold">🔍 Поиск</h2>
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="iPhone, BMW, квартира..." className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-            <div className="flex gap-2 overflow-x-auto pb-1">{CATEGORIES.map((c) => <button key={c.key} onClick={() => setSearchCat(c.key)} className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm border ${searchCat === c.key ? "bg-purple-600 border-purple-400" : "bg-slate-900 border-slate-800"}`}>{c.emoji} {c.key}</button>)}</div>
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="iPhone, BMW, квартира..." className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+            <div className="flex gap-2 overflow-x-auto pb-1">{CATEGORIES.map((c) => <button key={c.key} onClick={() => setSearchCat(c.key)} className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm border ${searchCat === c.key ? "bg-emerald-500 border-emerald-400" : "bg-white border-gray-200"}`}>{c.emoji} {c.key}</button>)}</div>
             <div className="flex gap-2">
-              <input value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} inputMode="numeric" placeholder="Цена от" className="w-1/2 px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              <input value={priceTo} onChange={(e) => setPriceTo(e.target.value)} inputMode="numeric" placeholder="Цена до" className="w-1/2 px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
+              <input value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} inputMode="numeric" placeholder="Цена от" className="w-1/2 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input value={priceTo} onChange={(e) => setPriceTo(e.target.value)} inputMode="numeric" placeholder="Цена до" className="w-1/2 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
             </div>
-            <span className="text-slate-400 text-sm">Найдено: {searchResults.length}</span>
+            <span className="text-gray-500 text-sm">Найдено: {searchResults.length}</span>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">{searchResults.map((p) => <ProductCard key={p.id} p={p} fav={favorites.includes(p.id)} mine={p.sellerId === currentUser.id} onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} />)}</div>
           </div>
         )}
@@ -1141,21 +1141,21 @@ export default function App() {
               <h2 className="text-xl font-bold">➕ Новое объявление</h2>
               <div className="grid grid-cols-4 gap-2">
                 {npImages.map((img, i) => (
-                  <div key={i} className="relative rounded-xl overflow-hidden border border-slate-700" style={{ aspectRatio: "1/1" }}>
+                  <div key={i} className="relative rounded-xl overflow-hidden border border-gray-300" style={{ aspectRatio: "1/1" }}>
                     <img src={img} alt="" className="w-full h-full object-cover" />
-                    {i === 0 && <span className="absolute top-1 left-1 bg-purple-600 px-1 rounded" style={{ fontSize: "8px" }}>ГЛАВНОЕ</span>}
+                    {i === 0 && <span className="absolute top-1 left-1 bg-emerald-500 text-white px-1 rounded" style={{ fontSize: "8px" }}>ГЛАВНОЕ</span>}
                     <button onClick={() => setNpImages(npImages.filter((_, j) => j !== i))} className="absolute top-1 right-1 bg-black/60 rounded-full w-5 h-5 text-xs">✕</button>
                   </div>
                 ))}
-                {npImages.length < 4 && <label className="flex items-center justify-center rounded-xl border-2 border-dashed border-slate-600 cursor-pointer text-2xl" style={{ aspectRatio: "1/1" }}>＋<input type="file" accept="image/*" multiple className="hidden" onChange={handleAddImages} /></label>}
+                {npImages.length < 4 && <label className="flex items-center justify-center rounded-xl border-2 border-dashed border-gray-400 cursor-pointer text-2xl" style={{ aspectRatio: "1/1" }}>＋<input type="file" accept="image/*" multiple className="hidden" onChange={handleAddImages} /></label>}
               </div>
-              <input value={npTitle} onChange={(e) => setNpTitle(e.target.value)} placeholder="Название" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              <input value={npPrice} onChange={(e) => setNpPrice(e.target.value)} inputMode="numeric" placeholder="Цена (TJS)" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              <select value={npCat} onChange={(e) => setNpCat(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none">{CATEGORIES.filter((c) => c.key !== "Все").map((c) => <option key={c.key}>{c.key}</option>)}</select>
-              <select value={npCity} onChange={(e) => setNpCity(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none">{CITIES.map((c) => <option key={c}>{c}</option>)}</select>
-              <input value={npPhone} onChange={(e) => setNpPhone(e.target.value)} placeholder="📞 Номер телефона" className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              <textarea value={npDesc} onChange={(e) => setNpDesc(e.target.value)} placeholder="Описание" rows={3} className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500" />
-              <button onClick={publishProduct} className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-lg shadow-lg active:scale-95 transition">⚡ Опубликовать</button>
+              <input value={npTitle} onChange={(e) => setNpTitle(e.target.value)} placeholder="Название" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input value={npPrice} onChange={(e) => setNpPrice(e.target.value)} inputMode="numeric" placeholder="Цена (TJS)" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <select value={npCat} onChange={(e) => setNpCat(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none">{CATEGORIES.filter((c) => c.key !== "Все").map((c) => <option key={c.key}>{c.key}</option>)}</select>
+              <select value={npCity} onChange={(e) => setNpCity(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none">{CITIES.map((c) => <option key={c}>{c}</option>)}</select>
+              <input value={npPhone} onChange={(e) => setNpPhone(e.target.value)} placeholder="📞 Номер телефона" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <textarea value={npDesc} onChange={(e) => setNpDesc(e.target.value)} placeholder="Описание" rows={3} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <button onClick={publishProduct} className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">⚡ Опубликовать</button>
             </div>
           </div>
         )}
@@ -1163,7 +1163,7 @@ export default function App() {
         {screen === "favorites" && (
           <div className="h-full overflow-y-auto p-4 space-y-3">
             <h2 className="text-xl font-bold">❤️ Избранное</h2>
-            {favProducts.length === 0 ? <p className="text-slate-400 text-center py-10">Пока пусто. Жми ❤️ на товарах.</p> : <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">{favProducts.map((p) => <ProductCard key={p.id} p={p} fav onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} mine={p.sellerId === currentUser.id} />)}</div>}
+            {favProducts.length === 0 ? <p className="text-gray-500 text-center py-10">Пока пусто. Жми ❤️ на товарах.</p> : <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">{favProducts.map((p) => <ProductCard key={p.id} p={p} fav onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} mine={p.sellerId === currentUser.id} />)}</div>}
           </div>
         )}
 
@@ -1172,17 +1172,17 @@ export default function App() {
             <div className="w-full max-w-2xl space-y-3">
               <h2 className="text-xl font-bold">💬 Сообщения</h2>
               <div className="flex gap-2">
-                <input value={findId} onChange={(e) => setFindId(e.target.value)} placeholder="🔍 Найти по ID (ILM-XXXXX)" onKeyDown={(e) => e.key === "Enter" && findUserById()} className="flex-1 px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-purple-500 uppercase" />
-                <button onClick={findUserById} className="px-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold shadow-md">Найти</button>
+                <input value={findId} onChange={(e) => setFindId(e.target.value)} placeholder="🔍 Найти по ID (ILM-XXXXX)" onKeyDown={(e) => e.key === "Enter" && findUserById()} className="flex-1 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500 uppercase" />
+                <button onClick={findUserById} className="px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md">Найти</button>
               </div>
-              <p className="text-xs text-slate-500">Твой ID: <b className="text-purple-300">{currentUser.id}</b> — дай его другу или брату, чтобы он написал тебе с другого ноутбука.</p>
-              {conversations.length === 0 ? <p className="text-slate-400 text-center py-10">Нет диалогов. Найди человека по ID или напиши продавцу из карточки.</p> : (
+              <p className="text-xs text-gray-400">Твой ID: <b className="text-emerald-600">{currentUser.id}</b> — дай его другу или брату, чтобы он написал тебе с другого ноутбука.</p>
+              {conversations.length === 0 ? <p className="text-gray-500 text-center py-10">Нет диалогов. Найди человека по ID или напиши продавцу из карточки.</p> : (
                 <div className="space-y-2">
                   {conversations.map((c) => (
-                    <button key={c.partner.id} onClick={() => openChatWith(c.partner.id)} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-slate-900 border border-slate-800 active:scale-[0.98] transition text-left">
+                    <button key={c.partner.id} onClick={() => openChatWith(c.partner.id)} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white border border-gray-200 active:scale-[0.98] transition text-left">
                       <AvatarView user={c.partner} size={48} />
-                      <div className="flex-1 min-w-0"><div className="flex items-center justify-between"><span className="font-bold truncate">{c.partner.nickname}</span><span className="text-xs text-slate-500">{fmtTime(c.last.ts)}</span></div><p className="text-sm text-slate-400 truncate">{c.last.kind === "voice" ? "🎤 Голосовое" : c.last.kind === "sticker" ? `Стикер ${c.last.text}` : c.last.text}</p></div>
-                      {c.unread > 0 && <span className="bg-pink-600 text-xs rounded-full px-2 py-0.5 font-bold">{c.unread}</span>}
+                      <div className="flex-1 min-w-0"><div className="flex items-center justify-between"><span className="font-bold truncate">{c.partner.nickname}</span><span className="text-xs text-gray-400">{fmtTime(c.last.ts)}</span></div><p className="text-sm text-gray-500 truncate">{c.last.kind === "voice" ? "🎤 Голосовое" : c.last.kind === "sticker" ? `Стикер ${c.last.text}` : c.last.text}</p></div>
+                      {c.unread > 0 && <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 font-bold">{c.unread}</span>}
                     </button>
                   ))}
                 </div>
@@ -1216,58 +1216,58 @@ export default function App() {
         {screen === "profile" && (
           <div className="h-full overflow-y-auto p-4 flex justify-center">
             <div className="w-full max-w-xl space-y-4">
-              <div className="rounded-3xl bg-slate-900 border border-purple-500/20 p-6 text-center shadow-lg">
+              <div className="rounded-3xl bg-white border border-emerald-100 p-6 text-center shadow-lg">
                 <button onClick={() => setAvatarPicker(!avatarPicker)} className="inline-block active:scale-90 transition"><AvatarView user={currentUser} size={88} /></button>
                 {avatarPicker && (
                   <div className="my-4 space-y-3">
                     <div className="grid grid-cols-5 gap-2">
-                      {AVATARS.map((a) => <button key={a} onClick={() => changeAvatar(a)} className="text-3xl p-2 rounded-xl bg-slate-800 active:scale-90">{a}</button>)}
+                      {AVATARS.map((a) => <button key={a} onClick={() => changeAvatar(a)} className="text-3xl p-2 rounded-xl bg-gray-100 active:scale-90">{a}</button>)}
                     </div>
-                    <label className="block w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold cursor-pointer active:scale-95 transition">
+                    <label className="block w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 font-bold cursor-pointer active:scale-95 transition">
                       📷 Загрузить фото
                       <input type="file" accept="image/*" className="hidden" onChange={handleAvatarPhoto} />
                     </label>
                   </div>
                 )}
                 {editingNick ? (
-                  <div className="flex gap-2 mt-3"><input value={newNick} onChange={(e) => setNewNick(e.target.value)} placeholder="Новый ник" className="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 outline-none" /><button onClick={saveNick} className="px-3 rounded-xl bg-purple-600 font-bold">✓</button></div>
+                  <div className="flex gap-2 mt-3"><input value={newNick} onChange={(e) => setNewNick(e.target.value)} placeholder="Новый ник" className="flex-1 px-3 py-2 rounded-xl bg-gray-100 border border-gray-300 outline-none" /><button onClick={saveNick} className="px-3 rounded-xl bg-emerald-500 text-white font-bold">✓</button></div>
                 ) : <h2 className="text-2xl font-bold mt-2">{currentUser.nickname}</h2>}
-                <p className="text-slate-400 text-sm mt-1">{isSeller ? "🏪 Продавец" : "🛒 Покупатель"}</p>
-                <div className="mt-2 inline-flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-xl"><span className="text-sm">ID: <b className="text-purple-300">{currentUser.id}</b></span><button onClick={() => { navigator.clipboard?.writeText(currentUser.id); showToast("ID скопирован", "ok"); }} className="text-xs bg-purple-600 px-2 py-0.5 rounded">копир.</button></div>
-                <div className="mt-4"><button onClick={() => { setEditingNick(!editingNick); setNewNick(currentUser.nickname); }} className="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm">✏️ Редактировать профиль</button></div>
+                <p className="text-gray-500 text-sm mt-1">{isSeller ? "🏪 Продавец" : "🛒 Покупатель"}</p>
+                <div className="mt-2 inline-flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-xl"><span className="text-sm">ID: <b className="text-emerald-600">{currentUser.id}</b></span><button onClick={() => { navigator.clipboard?.writeText(currentUser.id); showToast("ID скопирован", "ok"); }} className="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded">копир.</button></div>
+                <div className="mt-4"><button onClick={() => { setEditingNick(!editingNick); setNewNick(currentUser.nickname); }} className="px-4 py-2 rounded-xl bg-gray-100 border border-gray-300 text-sm">✏️ Редактировать профиль</button></div>
               </div>
 
-              <div className="rounded-2xl bg-purple-600/10 border border-purple-500/30 p-4"><h3 className="font-bold mb-1">🤝 Как проходят сделки на IlmTech</h3><p className="text-sm text-slate-300">Без оплаты в приложении и без комиссий. Покупатель пишет продавцу 💬, договаривается, встречаетесь лично и платите наличными.</p></div>
+              <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4"><h3 className="font-bold mb-1">🤝 Как проходят сделки на IlmTech</h3><p className="text-sm text-gray-700">Без оплаты в приложении и без комиссий. Покупатель пишет продавцу 💬, договаривается, встречаетесь лично и платите наличными.</p></div>
 
               <div className="grid grid-cols-3 gap-2 text-center"><Stat label="Объявлений" value={myProducts.length} /><Stat label="Избранное" value={favorites.length} /><Stat label="Просмотры" value={myProducts.reduce((s, p) => s + p.views, 0)} /></div>
 
               <div className="space-y-2">
                 {[{ e: "🔔", t: "Уведомления" }, { e: "✅", t: "Верификация" }, { e: "🛡️", t: "Безопасность" }, { e: "🌐", t: "Язык" }, { e: "❓", t: "Помощь" }].map((m) => (
-                  <button key={m.t} onClick={() => showToast(`«${m.t}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 text-left"><span className="text-xl">{m.e}</span><span>{m.t}</span><span className="ml-auto text-slate-500">›</span></button>
+                  <button key={m.t} onClick={() => showToast(`«${m.t}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">{m.e}</span><span>{m.t}</span><span className="ml-auto text-gray-400">›</span></button>
                 ))}
               </div>
 
-              <button onClick={() => { logout(); setAuthView("accounts"); }} className="w-full py-3 rounded-xl bg-slate-800 border border-slate-700 font-bold">🔄 Сменить аккаунт</button>
-              <button onClick={logout} className="w-full py-3 rounded-xl bg-red-600/20 border border-red-500/40 text-red-300 font-bold">🚪 Выйти</button>
+              <button onClick={() => { logout(); setAuthView("accounts"); }} className="w-full py-3 rounded-xl bg-gray-100 border border-gray-300 font-bold">🔄 Сменить аккаунт</button>
+              <button onClick={logout} className="w-full py-3 rounded-xl bg-red-50 border border-red-300 text-red-600 font-bold">🚪 Выйти</button>
             </div>
           </div>
         )}
 
         {!botOpen && screen !== "messages" && (
-          <button onClick={() => setBotOpen(true)} className="absolute bottom-4 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-2xl shadow-lg animate-bounce">🤖</button>
+          <button onClick={() => setBotOpen(true)} className="absolute bottom-4 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-2xl shadow-lg animate-bounce">🤖</button>
         )}
 
         {botOpen && (
-          <div className="absolute bottom-3 right-3 flex flex-col bg-slate-900 border border-purple-500/40 rounded-2xl overflow-hidden shadow-2xl" style={{ width: "min(360px, calc(100% - 24px))", height: "min(72%, 540px)" }}>
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600"><span className="font-bold">🤖 IlmBot</span><button onClick={() => setBotOpen(false)} className="text-xl">✕</button></div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">{botMsgs.map((m, i) => <div key={i} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}><div className={`px-3 py-2 rounded-2xl text-sm ${m.from === "user" ? "bg-purple-600" : "bg-slate-800"}`} style={{ maxWidth: "82%" }}>{m.text}</div></div>)}<div ref={botEndRef} /></div>
-            <div className="px-3 pb-2 flex flex-wrap gap-1">{BOT_QUICK.map((q) => <button key={q} onClick={() => sendBot(q)} className="text-xs px-2 py-1 rounded-lg bg-slate-800 border border-slate-700">{q}</button>)}</div>
-            <div className="flex gap-2 p-3 border-t border-slate-800"><input value={botInput} onChange={(e) => setBotInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendBot()} placeholder="Спроси что-нибудь..." className="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 outline-none text-sm" /><button onClick={() => sendBot()} className="px-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold">➤</button></div>
+          <div className="absolute bottom-3 right-3 flex flex-col bg-white border border-emerald-300 rounded-2xl overflow-hidden shadow-2xl" style={{ width: "min(360px, calc(100% - 24px))", height: "min(72%, 540px)" }}>
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-500"><span className="font-bold">🤖 IlmBot</span><button onClick={() => setBotOpen(false)} className="text-xl">✕</button></div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">{botMsgs.map((m, i) => <div key={i} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}><div className={`px-3 py-2 rounded-2xl text-sm ${m.from === "user" ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-900"}`} style={{ maxWidth: "82%" }}>{m.text}</div></div>)}<div ref={botEndRef} /></div>
+            <div className="px-3 pb-2 flex flex-wrap gap-1">{BOT_QUICK.map((q) => <button key={q} onClick={() => sendBot(q)} className="text-xs px-2 py-1 rounded-lg bg-gray-100 border border-gray-300">{q}</button>)}</div>
+            <div className="flex gap-2 p-3 border-t border-gray-200"><input value={botInput} onChange={(e) => setBotInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendBot()} placeholder="Спроси что-нибудь..." className="flex-1 px-3 py-2 rounded-xl bg-gray-100 border border-gray-300 outline-none text-sm" /><button onClick={() => sendBot()} className="px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold">➤</button></div>
           </div>
         )}
       </main>
 
-      <nav className="relative z-10 shrink-0 flex items-center justify-around bg-slate-950/90 backdrop-blur-xl border-t border-purple-500/20 py-2">
+      <nav className="relative z-10 shrink-0 flex items-center justify-around bg-white/90 backdrop-blur-xl border-t border-emerald-100 py-2">
         <NavBtn emoji="🏠" label="Главная" active={screen === "home"} onClick={() => setScreen("home")} />
         <NavBtn emoji="🔍" label="Поиск" active={screen === "search"} onClick={() => setScreen("search")} />
         {isSeller && <NavBtn emoji="➕" label="Продать" active={screen === "add"} onClick={() => setScreen("add")} />}
@@ -1301,10 +1301,10 @@ export default function App() {
 
 function AvatarView({ user, size }: { user: { avatar: string; avatarIsPhoto: boolean }; size: number }) {
   if (user.avatarIsPhoto) {
-    return <img src={user.avatar} alt="" className="rounded-full object-cover border border-purple-500/40" style={{ width: size, height: size }} />;
+    return <img src={user.avatar} alt="" className="rounded-full object-cover border-2 border-emerald-400 shadow-sm" style={{ width: size, height: size }} />;
   }
   return (
-    <span className="inline-flex items-center justify-center rounded-full bg-slate-800 border border-slate-700" style={{ width: size, height: size, fontSize: size * 0.55 }}>
+    <span className="inline-flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-50 to-green-100 border border-emerald-200" style={{ width: size, height: size, fontSize: size * 0.55 }}>
       {user.avatar}
     </span>
   );
@@ -1312,19 +1312,19 @@ function AvatarView({ user, size }: { user: { avatar: string; avatarIsPhoto: boo
 
 function NavBtn({ emoji, label, active, onClick, badge }: { emoji: string; label: string; active: boolean; onClick: () => void; badge?: number; }) {
   return (
-    <button onClick={onClick} className={`relative flex flex-col items-center gap-0.5 px-2 ${active ? "text-purple-400" : "text-slate-400"}`}>
+    <button onClick={onClick} className={`relative flex flex-col items-center gap-0.5 px-2 ${active ? "text-emerald-600" : "text-gray-500"}`}>
       <span className="text-xl">{emoji}</span>
       <span style={{ fontSize: "10px" }}>{label}</span>
-      {badge !== undefined && badge > 0 && <span className="absolute -top-1 right-0 bg-pink-600 text-white rounded-full px-1.5 py-0.5 font-bold" style={{ fontSize: "9px" }}>{badge}</span>}
+      {badge !== undefined && badge > 0 && <span className="absolute -top-1 right-0 bg-red-500 text-gray-900 rounded-full px-1.5 py-0.5 font-bold" style={{ fontSize: "9px" }}>{badge}</span>}
     </button>
   );
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl bg-slate-900 border border-slate-800 py-4">
-      <div className="text-2xl font-black text-purple-400">{value}</div>
-      <div className="text-xs text-slate-400">{label}</div>
+    <div className="rounded-2xl bg-white border border-gray-200 py-4">
+      <div className="text-2xl font-black text-emerald-600">{value}</div>
+      <div className="text-xs text-gray-500">{label}</div>
     </div>
   );
 }
@@ -1332,16 +1332,16 @@ function Stat({ label, value }: { label: string; value: number }) {
 function ProductCard({ p, fav, mine, onOpen, onFav }: { p: Product; fav: boolean; mine: boolean; onOpen: () => void; onFav: () => void; }) {
   const emoji = p._emoji || productEmoji[p.category] || "📦";
   return (
-    <div onClick={onOpen} className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden cursor-pointer active:scale-[0.97] transition shadow-md">
-      <div className="relative h-28 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+    <div onClick={onOpen} className="rounded-2xl bg-white border border-gray-200 overflow-hidden cursor-pointer active:scale-[0.97] hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 shadow-sm">
+      <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         {p.images.length > 0 ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" /> : <span className="text-5xl">{emoji}</span>}
-        {mine ? <span className="absolute top-1 left-1 bg-blue-600 px-1.5 py-0.5 rounded font-bold" style={{ fontSize: "9px" }}>Моё</span> : p.badge ? <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded font-bold ${p.badge === "VIP" ? "bg-yellow-500 text-black" : "bg-pink-600"}`} style={{ fontSize: "9px" }}>{p.badge}</span> : null}
+        {mine ? <span className="absolute top-1 left-1 bg-blue-500 text-white px-1.5 py-0.5 rounded font-bold" style={{ fontSize: "9px" }}>Моё</span> : p.badge ? <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded font-bold ${p.badge === "VIP" ? "bg-amber-400 text-gray-900" : "bg-red-500 text-white"}`} style={{ fontSize: "9px" }}>{p.badge}</span> : null}
         <button onClick={(e) => { e.stopPropagation(); onFav(); }} className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">{fav ? "❤️" : "🤍"}</button>
       </div>
       <div className="p-2">
-        <div className="font-black text-purple-300">{fmtPrice(p.price)} TJS</div>
+        <div className="font-black text-emerald-600">{fmtPrice(p.price)} TJS</div>
         <div className="text-sm truncate">{p.title}</div>
-        <div className="text-slate-500 flex items-center justify-between mt-1" style={{ fontSize: "11px" }}><span>📍 {p.city}</span><span>👁 {p.views}</span></div>
+        <div className="text-gray-400 flex items-center justify-between mt-1" style={{ fontSize: "11px" }}><span>📍 {p.city}</span><span>👁 {p.views}</span></div>
       </div>
     </div>
   );
@@ -1356,37 +1356,37 @@ function ProductModal({ p, fav, mine, commentText, setCommentText, onAddComment,
   const emoji = p._emoji || productEmoji[p.category] || "📦";
   return (
     <div className="absolute inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full sm:max-w-lg overflow-y-auto bg-slate-900 border border-purple-500/30 rounded-t-3xl sm:rounded-3xl" style={{ maxHeight: "92%" }}>
-        <div className="relative h-56 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+      <div onClick={(e) => e.stopPropagation()} className="w-full sm:max-w-lg overflow-y-auto bg-white border border-emerald-200 rounded-t-3xl sm:rounded-3xl" style={{ maxHeight: "92%" }}>
+        <div className="relative h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
           {p.images.length > 0 ? <img src={p.images[imgIdx]} alt={p.title} className="w-full h-full object-cover" /> : <span className="text-8xl">{emoji}</span>}
           <button onClick={onClose} className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 text-lg">✕</button>
           <button onClick={onFav} className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/60 text-lg">{fav ? "❤️" : "🤍"}</button>
-          {p.badge && !mine && <span className={`absolute bottom-3 left-3 text-xs px-2 py-1 rounded font-bold ${p.badge === "VIP" ? "bg-yellow-500 text-black" : "bg-pink-600"}`}>{p.badge}</span>}
+          {p.badge && !mine && <span className={`absolute bottom-3 left-3 text-xs px-2 py-1 rounded font-bold ${p.badge === "VIP" ? "bg-amber-400 text-gray-900" : "bg-red-500 text-white"}`}>{p.badge}</span>}
           {p.images.length > 1 && <div className="absolute bottom-3 right-3 flex gap-1">{p.images.map((_, i) => <button key={i} onClick={() => setImgIdx(i)} className={`w-2 h-2 rounded-full ${i === imgIdx ? "bg-white" : "bg-white/40"}`} />)}</div>}
         </div>
         <div className="p-4 space-y-3">
-          <div className="text-3xl font-black text-purple-300">{fmtPrice(p.price)} TJS</div>
+          <div className="text-3xl font-black text-emerald-600">{fmtPrice(p.price)} TJS</div>
           <h2 className="text-xl font-bold">{p.title}</h2>
-          <p className="text-slate-300 text-sm">{p.description}</p>
-          <div className="flex items-center gap-3 text-xs text-slate-400"><span>📍 {p.city}</span><span>🕐 {timeAgo(p.createdAt)}</span><span>👁 {p.views}</span></div>
+          <p className="text-gray-700 text-sm">{p.description}</p>
+          <div className="flex items-center gap-3 text-xs text-gray-500"><span>📍 {p.city}</span><span>🕐 {timeAgo(p.createdAt)}</span><span>👁 {p.views}</span></div>
           <div className="flex items-center gap-2 text-sm"><AvatarView user={{ avatar: p.sellerAvatar, avatarIsPhoto: p.sellerIsPhoto }} size={28} /><span className="font-bold">{p.sellerName}</span></div>
           {!mine ? (
             <div className="grid grid-cols-2 gap-2">
-              <a href={`tel:${p.phone.replace(/\s/g, "")}`} className="py-3 rounded-xl bg-green-600 font-bold text-center active:scale-95 transition">📞 Позвонить</a>
-              <button onClick={onWrite} className="py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 font-bold shadow-md active:scale-95 transition">💬 Написать</button>
+              <a href={`tel:${p.phone.replace(/\s/g, "")}`} className="py-3 rounded-xl bg-green-500 text-white font-bold text-center active:scale-95 transition">📞 Позвонить</a>
+              <button onClick={onWrite} className="py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md active:scale-95 transition">💬 Написать</button>
             </div>
-          ) : <div className="py-2 text-center text-slate-400 text-sm">Это ваше объявление</div>}
-          <button onClick={() => setShowComments(!showComments)} className="w-full py-2 rounded-xl bg-slate-800 border border-slate-700 text-sm">💬 Комментарии ({p.comments.length})</button>
+          ) : <div className="py-2 text-center text-gray-500 text-sm">Это ваше объявление</div>}
+          <button onClick={() => setShowComments(!showComments)} className="w-full py-2 rounded-xl bg-gray-100 border border-gray-300 text-sm">💬 Комментарии ({p.comments.length})</button>
           {showComments && (
             <div className="space-y-2">
-              {p.comments.length === 0 && <p className="text-slate-500 text-sm text-center py-2">Комментариев пока нет</p>}
+              {p.comments.length === 0 && <p className="text-gray-400 text-sm text-center py-2">Комментариев пока нет</p>}
               {p.comments.map((c) => (
-                <div key={c.id} className="flex gap-2 bg-slate-800 rounded-xl p-2">
+                <div key={c.id} className="flex gap-2 bg-gray-100 rounded-xl p-2">
                   <AvatarView user={{ avatar: c.authorAvatar, avatarIsPhoto: c.authorIsPhoto }} size={28} />
-                  <div className="flex-1"><div className="text-xs text-purple-300 font-bold">{c.authorName} <span className="text-slate-500 font-normal">· {timeAgo(c.ts)}</span></div><div className="text-sm">{c.text}</div></div>
+                  <div className="flex-1"><div className="text-xs text-emerald-600 font-bold">{c.authorName} <span className="text-gray-400 font-normal">· {timeAgo(c.ts)}</span></div><div className="text-sm">{c.text}</div></div>
                 </div>
               ))}
-              <div className="flex gap-2"><input value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onAddComment()} placeholder="Написать комментарий..." className="flex-1 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 outline-none text-sm" /><button onClick={onAddComment} className="px-3 rounded-xl bg-purple-600 font-bold">➤</button></div>
+              <div className="flex gap-2"><input value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onAddComment()} placeholder="Написать комментарий..." className="flex-1 px-3 py-2 rounded-xl bg-gray-100 border border-gray-300 outline-none text-sm" /><button onClick={onAddComment} className="px-3 rounded-xl bg-emerald-500 text-white font-bold">➤</button></div>
             </div>
           )}
         </div>
@@ -1403,22 +1403,22 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
   const [stickersOpen, setStickersOpen] = useState(false);
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800 shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 shrink-0">
         <button onClick={onBack} className="text-xl">←</button>
         <AvatarView user={partner} size={40} />
-        <div className="flex-1 min-w-0"><div className="font-bold truncate">{partner.nickname}</div><div className="text-xs text-slate-500">{partner.id}</div></div>
+        <div className="flex-1 min-w-0"><div className="font-bold truncate">{partner.nickname}</div><div className="text-xs text-gray-400">{partner.id}</div></div>
         <button onClick={onDelete} className="text-xl active:scale-90 transition" title="Удалить переписку">🗑️</button>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
-        {thread.length === 0 && <p className="text-slate-500 text-center py-10 text-sm">Сообщений пока нет. Напишите первым 👇</p>}
+        {thread.length === 0 && <p className="text-gray-400 text-center py-10 text-sm">Сообщений пока нет. Напишите первым 👇</p>}
         {thread.map((m) => {
           const mine = m.fromId === myId;
           if (m.kind === "sticker") return <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}><div className="text-5xl">{m.text}</div></div>;
           return (
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-              <div className={`px-3 py-2 rounded-2xl ${mine ? "bg-gradient-to-r from-purple-600 to-pink-600" : "bg-slate-800"}`} style={{ maxWidth: "75%" }}>
+              <div className={`px-3 py-2 rounded-2xl ${mine ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white" : "bg-gray-100 text-gray-900"}`} style={{ maxWidth: "75%" }}>
                 {m.kind === "voice" ? <audio controls src={m.audio} style={{ height: 36, maxWidth: 200 }} /> : <span className="text-sm">{m.text}</span>}
-                <div className="text-right mt-0.5" style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)" }}>{fmtTime(m.ts)}</div>
+                <div className="text-right mt-0.5" style={{ fontSize: "10px", color: "rgba(255,255,255,0.85)" }}>{fmtTime(m.ts)}</div>
               </div>
             </div>
           );
@@ -1426,25 +1426,25 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
         <div ref={chatEndRef} />
       </div>
       {stickersOpen && (
-        <div className="grid grid-cols-8 gap-1 p-2 bg-slate-900 border-t border-slate-800 shrink-0" style={{ maxHeight: 140, overflowY: "auto" }}>
-          {STICKERS.map((s) => <button key={s} onClick={() => { onSticker(s); setStickersOpen(false); }} className="text-2xl p-1 rounded-lg active:scale-90 hover:bg-slate-800">{s}</button>)}
+        <div className="grid grid-cols-8 gap-1 p-2 bg-white border-t border-gray-200 shrink-0" style={{ maxHeight: 140, overflowY: "auto" }}>
+          {STICKERS.map((s) => <button key={s} onClick={() => { onSticker(s); setStickersOpen(false); }} className="text-2xl p-1 rounded-lg active:scale-90 hover:bg-gray-100">{s}</button>)}
         </div>
       )}
-      <div className="flex items-center gap-2 p-3 border-t border-slate-800 bg-slate-900 shrink-0">
+      <div className="flex items-center gap-2 p-3 border-t border-gray-200 bg-white shrink-0">
         <button onClick={() => setStickersOpen(!stickersOpen)} className="text-2xl">😀</button>
-        <input value={msgInput} onChange={(e) => setMsgInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onSend()} onFocus={() => setStickersOpen(false)} placeholder="Сообщение..." className="flex-1 px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 outline-none" />
+        <input value={msgInput} onChange={(e) => setMsgInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onSend()} onFocus={() => setStickersOpen(false)} placeholder="Сообщение..." className="flex-1 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none" />
         {msgInput.trim() ? (
-          <button onClick={onSend} className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 font-bold text-lg flex items-center justify-center shadow-md">➤</button>
+          <button onClick={onSend} className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 font-bold text-lg flex items-center justify-center shadow-md">➤</button>
         ) : (
-          <button onMouseDown={startRecording} onMouseUp={stopRecording} onMouseLeave={() => isRecording && stopRecording()} onTouchStart={(e) => { e.preventDefault(); startRecording(); }} onTouchEnd={(e) => { e.preventDefault(); stopRecording(); }} className={`w-12 h-12 rounded-full flex items-center justify-center text-lg ${isRecording ? "bg-red-600 animate-pulse" : "bg-slate-700"}`}>🎤</button>
+          <button onMouseDown={startRecording} onMouseUp={stopRecording} onMouseLeave={() => isRecording && stopRecording()} onTouchStart={(e) => { e.preventDefault(); startRecording(); }} onTouchEnd={(e) => { e.preventDefault(); stopRecording(); }} className={`w-12 h-12 rounded-full flex items-center justify-center text-lg ${isRecording ? "bg-red-600 animate-pulse" : "bg-gray-200"}`}>🎤</button>
         )}
       </div>
-      {isRecording && <div className="text-center text-xs text-red-400 pb-2 shrink-0">● Идёт запись... отпустите кнопку</div>}
+      {isRecording && <div className="text-center text-xs text-red-600 pb-2 shrink-0">● Идёт запись... отпустите кнопку</div>}
     </div>
   );
 }
 
 function ToastView({ toast }: { toast: Toast }) {
-  const color = toast.type === "ok" ? "bg-green-600" : toast.type === "err" ? "bg-red-600" : "bg-purple-600";
+  const color = toast.type === "ok" ? "bg-emerald-500" : toast.type === "err" ? "bg-red-500 text-white" : "bg-emerald-500";
   return <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 ${color} text-white px-4 py-2 rounded-xl shadow-lg text-sm font-medium text-center`} style={{ maxWidth: "90%" }}>{toast.msg}</div>;
 }
