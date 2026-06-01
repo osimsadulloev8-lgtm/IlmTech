@@ -46,6 +46,7 @@ interface User {
   avatar: string;
   avatarIsPhoto: boolean;
   createdAt: number;
+  lastSeen: number;  // время последнего захода на сайт (для статуса «в сети»)
 }
 
 interface Comment {
@@ -164,6 +165,7 @@ async function apiLoadUsers(): Promise<User[]> {
     avatar: (r.avatar as string) || "😎",
     avatarIsPhoto: !!r.avatar_is_photo,
     createdAt: Number(r.created_at) || 0,
+    lastSeen: Number(r.last_seen) || 0,
   }));
 }
 
@@ -172,6 +174,7 @@ async function apiInsertUser(u: User): Promise<{ ok: boolean; err?: string }> {
   const { error } = await supabase.from("ilm_users").insert({
     id: u.id, email: u.email, nickname: u.nickname, password: u.password,
     role: u.role, avatar: u.avatar, avatar_is_photo: u.avatarIsPhoto, created_at: u.createdAt,
+    last_seen: u.lastSeen,
   });
   if (error) return { ok: false, err: error.message };
   return { ok: true };
@@ -230,6 +233,13 @@ async function apiInsertMessage(m: Message): Promise<void> {
 async function apiMarkRead(fromId: string, toId: string): Promise<void> {
   await supabase.from("ilm_messages").update({ read: true })
     .eq("from_id", fromId).eq("to_id", toId).eq("read", false);
+}
+
+/** Обновить «время последней активности» — для статуса «в сети». Молча игнорирует ошибку (если колонки нет). */
+async function apiTouchLastSeen(userId: string): Promise<void> {
+  try {
+    await supabase.from("ilm_users").update({ last_seen: Date.now() }).eq("id", userId);
+  } catch { /* колонки может не быть */ }
 }
 
 /** Удалить всю переписку между двумя пользователями */
@@ -310,6 +320,24 @@ const fuzzyHas = (text: string, keywords: string[]): boolean => {
     }
   }
   return false;
+};
+
+/** Считается ли пользователь «в сети»: был активен в последние 2 минуты */
+const isOnline = (lastSeen: number): boolean => {
+  if (!lastSeen) return false;
+  return Date.now() - lastSeen < 2 * 60 * 1000;
+};
+
+/** Текст «был N мин/ч/дн назад» */
+const lastSeenText = (lastSeen: number): string => {
+  if (!lastSeen) return "был давно";
+  const diff = Date.now() - lastSeen;
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "только что";
+  if (minutes < 60) return `был ${minutes} мин назад`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `был ${hours} ч назад`;
+  return `был ${Math.floor(hours / 24)} дн назад`;
 };
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -577,6 +605,26 @@ export default function App() {
     }
   }, [botMsgs, botOpen]);
 
+  /* ════════════════ HEARTBEAT — обновляю «время последней активности» каждые 30 сек ════════════════ */
+  useEffect(() => {
+    if (!currentUser) return;
+    // первый раз — сразу
+    apiTouchLastSeen(currentUser.id);
+    // дальше — каждые 30 секунд
+    const interval = setInterval(() => apiTouchLastSeen(currentUser.id), 30_000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
+  /* ════════════════ Периодически перезагружаю список юзеров чтобы видеть кто в сети ════════════════ */
+  useEffect(() => {
+    if (!currentUser) return;
+    const interval = setInterval(async () => {
+      const fresh = await apiLoadUsers();
+      setUsers(fresh);
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
   /* ════════════════════════════════════════════════════════════════════════
      АВТОРИЗАЦИЯ
   ════════════════════════════════════════════════════════════════════════ */
@@ -620,6 +668,7 @@ export default function App() {
         avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
         avatarIsPhoto: false,
         createdAt: Date.now(),
+        lastSeen: Date.now(),
       };
       const res = await apiInsertUser(nu);
       if (!res.ok) { setAuthErr("Ошибка сервера: " + (res.err || "")); return; }
@@ -1014,7 +1063,7 @@ export default function App() {
               {knownAccounts.length === 0 && <p className="text-gray-400 text-sm text-center py-4">Пока нет сохранённых аккаунтов</p>}
               {knownAccounts.map((u) => (
                 <button key={u.id} onClick={() => switchTo(u.id)} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gray-100 border border-gray-300 active:scale-95 transition text-left">
-                  <AvatarView user={u} size={44} />
+                  <AvatarView user={u} size={44} showOnline />
                   <div className="flex-1 min-w-0">
                     <div className="font-bold truncate">{u.nickname}</div>
                     <div className="text-xs text-gray-500">{u.role === "seller" ? "🏪 Продавец" : "🛒 Покупатель"} · {u.id}</div>
@@ -1180,7 +1229,7 @@ export default function App() {
                 <div className="space-y-2">
                   {conversations.map((c) => (
                     <button key={c.partner.id} onClick={() => openChatWith(c.partner.id)} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white border border-gray-200 active:scale-[0.98] transition text-left">
-                      <AvatarView user={c.partner} size={48} />
+                      <AvatarView user={c.partner} size={48} showOnline />
                       <div className="flex-1 min-w-0"><div className="flex items-center justify-between"><span className="font-bold truncate">{c.partner.nickname}</span><span className="text-xs text-gray-400">{fmtTime(c.last.ts)}</span></div><p className="text-sm text-gray-500 truncate">{c.last.kind === "voice" ? "🎤 Голосовое" : c.last.kind === "sticker" ? `Стикер ${c.last.text}` : c.last.text}</p></div>
                       {c.unread > 0 && <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 font-bold">{c.unread}</span>}
                     </button>
@@ -1299,13 +1348,22 @@ export default function App() {
    ПОДКОМПОНЕНТЫ
    ════════════════════════════════════════════════════════════════════════════ */
 
-function AvatarView({ user, size }: { user: { avatar: string; avatarIsPhoto: boolean }; size: number }) {
-  if (user.avatarIsPhoto) {
-    return <img src={user.avatar} alt="" className="rounded-full object-cover border-2 border-emerald-400 shadow-sm" style={{ width: size, height: size }} />;
-  }
+function AvatarView({ user, size, showOnline }: { user: { avatar: string; avatarIsPhoto: boolean; lastSeen?: number }; size: number; showOnline?: boolean }) {
+  const online = showOnline && typeof user.lastSeen === "number" && isOnline(user.lastSeen);
+  const dotSize = Math.max(10, Math.floor(size * 0.28));
+  const inner = user.avatarIsPhoto
+    ? <img src={user.avatar} alt="" className="rounded-full object-cover border-2 border-emerald-400 shadow-sm w-full h-full" />
+    : <span className="inline-flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-50 to-green-100 border border-emerald-200 w-full h-full" style={{ fontSize: size * 0.55 }}>{user.avatar}</span>;
   return (
-    <span className="inline-flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-50 to-green-100 border border-emerald-200" style={{ width: size, height: size, fontSize: size * 0.55 }}>
-      {user.avatar}
+    <span className="relative inline-block" style={{ width: size, height: size }}>
+      {inner}
+      {online && (
+        <span
+          className="absolute bg-emerald-500 border-2 border-white rounded-full"
+          style={{ width: dotSize, height: dotSize, right: 0, bottom: 0 }}
+          title="В сети"
+        />
+      )}
     </span>
   );
 }
@@ -1405,8 +1463,13 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 shrink-0">
         <button onClick={onBack} className="text-xl">←</button>
-        <AvatarView user={partner} size={40} />
-        <div className="flex-1 min-w-0"><div className="font-bold truncate">{partner.nickname}</div><div className="text-xs text-gray-400">{partner.id}</div></div>
+        <AvatarView user={partner} size={40} showOnline />
+        <div className="flex-1 min-w-0">
+          <div className="font-bold truncate">{partner.nickname}</div>
+          <div className="text-xs text-gray-400">
+            {isOnline(partner.lastSeen) ? <span className="text-emerald-600 font-semibold">🟢 в сети</span> : lastSeenText(partner.lastSeen)} · {partner.id}
+          </div>
+        </div>
         <button onClick={onDelete} className="text-xl active:scale-90 transition" title="Удалить переписку">🗑️</button>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
