@@ -232,6 +232,13 @@ async function apiMarkRead(fromId: string, toId: string): Promise<void> {
     .eq("from_id", fromId).eq("to_id", toId).eq("read", false);
 }
 
+/** Удалить всю переписку между двумя пользователями */
+async function apiDeleteConversation(myId: string, partnerId: string): Promise<void> {
+  // удаляем сообщения в обе стороны
+  await supabase.from("ilm_messages").delete().eq("from_id", myId).eq("to_id", partnerId);
+  await supabase.from("ilm_messages").delete().eq("from_id", partnerId).eq("to_id", myId);
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
    РАЗДЕЛ 6. УТИЛИТЫ
    ════════════════════════════════════════════════════════════════════════════ */
@@ -552,8 +559,23 @@ export default function App() {
   }, [messages, chatPartnerId, currentUser]);
 
   /* автоскролл */
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, chatPartnerId]);
-  useEffect(() => { botEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [botMsgs, botOpen]);
+  /* автоскролл вниз: мгновенно при открытии чата, плавно при новых сообщениях */
+  useEffect(() => {
+    // при открытии чата прыгаем в самый низ мгновенно
+    if (chatPartnerId && chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "auto", block: "end" });
+    }
+  }, [chatPartnerId]);
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages]);
+  useEffect(() => {
+    if (botEndRef.current) {
+      botEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [botMsgs, botOpen]);
 
   /* ════════════════════════════════════════════════════════════════════════
      АВТОРИЗАЦИЯ
@@ -829,6 +851,19 @@ export default function App() {
     if (found.id === currentUser?.id) { showToast("Это ваш собственный ID 🙂", "err"); return; }
     setFindId("");
     openChatWith(found.id);
+  };
+
+  /** Удалить всю переписку с собеседником */
+  const deleteChat = async (partnerId: string) => {
+    if (!currentUser) return;
+    if (!window.confirm("Удалить всю переписку? Это нельзя отменить.")) return;
+    await apiDeleteConversation(currentUser.id, partnerId);
+    setMessages((prev) => prev.filter((m) =>
+      !((m.fromId === currentUser.id && m.toId === partnerId) ||
+        (m.fromId === partnerId && m.toId === currentUser.id))
+    ));
+    setChatPartnerId(null);
+    showToast("Переписка удалена", "ok");
   };
 
   /* ════════════════════════════════════════════════════════════════════════
@@ -1171,6 +1206,7 @@ export default function App() {
                 startRecording={startRecording}
                 stopRecording={stopRecording}
                 onBack={() => setChatPartnerId(null)}
+                onDelete={() => deleteChat(chatPartnerId)}
                 chatEndRef={chatEndRef}
               />
             </div>
@@ -1359,10 +1395,10 @@ function ProductModal({ p, fav, mine, commentText, setCommentText, onAddComment,
   );
 }
 
-function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSticker, isRecording, startRecording, stopRecording, onBack, chatEndRef }: {
+function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSticker, isRecording, startRecording, stopRecording, onBack, onDelete, chatEndRef }: {
   partner: User; thread: Message[]; myId: string; msgInput: string; setMsgInput: (s: string) => void;
   onSend: () => void; onSticker: (e: string) => void; isRecording: boolean;
-  startRecording: () => void; stopRecording: () => void; onBack: () => void; chatEndRef: React.RefObject<HTMLDivElement | null>;
+  startRecording: () => void; stopRecording: () => void; onBack: () => void; onDelete: () => void; chatEndRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const [stickersOpen, setStickersOpen] = useState(false);
   return (
@@ -1370,7 +1406,8 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
       <div className="flex items-center gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800 shrink-0">
         <button onClick={onBack} className="text-xl">←</button>
         <AvatarView user={partner} size={40} />
-        <div><div className="font-bold">{partner.nickname}</div><div className="text-xs text-slate-500">{partner.id}</div></div>
+        <div className="flex-1 min-w-0"><div className="font-bold truncate">{partner.nickname}</div><div className="text-xs text-slate-500">{partner.id}</div></div>
+        <button onClick={onDelete} className="text-xl active:scale-90 transition" title="Удалить переписку">🗑️</button>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
         {thread.length === 0 && <p className="text-slate-500 text-center py-10 text-sm">Сообщений пока нет. Напишите первым 👇</p>}
