@@ -137,6 +137,149 @@ const productEmoji: Record<string, string> = {
 };
 
 /* ════════════════════════════════════════════════════════════════════════════
+   ЯЗЫКИ — словарь переводов
+   ════════════════════════════════════════════════════════════════════════════ */
+
+type Lang = "ru" | "tg" | "en";
+
+const LANG_NAMES: Record<Lang, string> = {
+  ru: "Русский",
+  tg: "Тоҷикӣ",
+  en: "English",
+};
+
+const T_RU = {
+  // навигация
+  home: "Главная", search: "Поиск", sell: "Продать", chats: "Чаты", favs: "Избр.", profile: "Профиль",
+  // авторизация
+  login: "Войти", register: "Зарегистрироваться", myAccounts: "Мои аккаунты",
+  loginTitle: "Вход", regStep1: "Регистрация · Шаг 1", regStep2: "Регистрация · Шаг 2",
+  email: "📧 Почта (name@mail.com)", nickname: "👤 Никнейм", password: "🔒 Пароль (мин. 4)",
+  passwordRepeat: "🔒 Повторите пароль", next: "Далее →", back: "← Назад",
+  selectRole: "Выберите роль:", buyer: "Покупатель", seller: "Продавец",
+  createAccount: "Создать аккаунт ✓", creating: "Создаём...",
+  // главная
+  homeBanner1: "Найди. Продай. Купи.", homeBanner2: "Всё на IlmTech ⚡",
+  adsCount: "объявлений", noAds: "Объявлений пока нет. Будь первым! 🚀",
+  sortNew: "Новые", sortAsc: "Цена ↑", sortDesc: "Цена ↓",
+  more: "Ещё", allCategories: "Все категории",
+  // поиск
+  searchPlaceholder: "iPhone, BMW, квартира...",
+  priceFrom: "Цена от", priceTo: "Цена до", foundCount: "Найдено",
+  // карточка товара
+  call: "📞 Позвонить", write: "💬 Написать", myAd: "Это ваше объявление",
+  commentsCount: "Комментарии", noComments: "Комментариев пока нет",
+  writeComment: "Написать комментарий...",
+  // новое объявление
+  newAd: "➕ Новое объявление", title: "Название", price: "Цена (TJS)",
+  phone: "📞 Номер телефона", description: "Описание", publish: "⚡ Опубликовать",
+  // профиль
+  editProfile: "✏️ Редактировать профиль", changeAvatar: "📷 Загрузить фото",
+  myAdsCount: "Объявлений", favsCount: "Избранное", viewsCount: "Просмотры",
+  followers: "Подписчики", following: "Подписки",
+  notifications: "Уведомления", verification: "Верификация", security: "Безопасность",
+  language: "Язык", help: "Помощь",
+  switchAccount: "🔄 Сменить аккаунт", logout: "🚪 Выйти",
+  // профиль другого
+  follow: "➕ Подписаться", unfollow: "✓ Вы подписаны",
+  adsLabel: "🏪 Объявления", followersShort: "Подписч.", followingShort: "Подписки", adsShort: "Объявл.",
+  // чаты
+  messages: "💬 Сообщения", findById: "🔍 Найти по ID (ILM-XXXXX)", findBtn: "Найти",
+  yourIdHint: "Твой ID: ", giveItToFriend: " — дай его другу или брату, чтобы он написал тебе с другого ноутбука.",
+  noDialogs: "Нет диалогов. Найди человека по ID или напиши продавцу из карточки.",
+  noMessages: "Сообщений пока нет. Напишите первым 👇",
+  messageInput: "Сообщение...", recording: "● Идёт запись... отпустите кнопку",
+  online: "🟢 в сети", voiceMsg: "🎤 Голосовое", stickerLabel: "Стикер",
+  deleteChat: "Удалить переписку", deleteMsg: "Удалить", confirmDeleteChat: "Удалить всю переписку? Это нельзя отменить.",
+  confirmDeleteMsg: "Удалить это сообщение?",
+  // прочее
+  sortMode: "Сортировка", post: "Подать", bot: "IlmBot", askBot: "Спроси что-нибудь...",
+  // языки
+  langTitle: "Выберите язык",
+};
+
+const T_TG: typeof T_RU = {
+  home: "Асосӣ", search: "Ҷустуҷӯ", sell: "Фурӯш", chats: "Чатҳо", favs: "Дӯстдошта", profile: "Профил",
+  login: "Даромадан", register: "Бақайдгирӣ", myAccounts: "Аккаунтҳои ман",
+  loginTitle: "Даромадан", regStep1: "Бақайдгирӣ · Қадами 1", regStep2: "Бақайдгирӣ · Қадами 2",
+  email: "📧 Почта (name@mail.com)", nickname: "👤 Лақаб", password: "🔒 Парол (мин. 4)",
+  passwordRepeat: "🔒 Паролро такрор кунед", next: "Минбаъд →", back: "← Бозгашт",
+  selectRole: "Нақшро интихоб кунед:", buyer: "Харидор", seller: "Фурӯшанда",
+  createAccount: "Аккаунт сохтан ✓", creating: "Сохта истода...",
+  homeBanner1: "Биёб. Фурӯш. Харид кун.", homeBanner2: "Ҳама дар IlmTech ⚡",
+  adsCount: "эълон", noAds: "Ҳоло эълон нест. Якум шав! 🚀",
+  sortNew: "Нав", sortAsc: "Нарх ↑", sortDesc: "Нарх ↓",
+  more: "Бештар", allCategories: "Ҳамаи категорияҳо",
+  searchPlaceholder: "iPhone, BMW, хонадон...",
+  priceFrom: "Нарх аз", priceTo: "Нарх то", foundCount: "Ёфт шуд",
+  call: "📞 Занг задан", write: "💬 Навиштан", myAd: "Ин эълони шумост",
+  commentsCount: "Шарҳҳо", noComments: "Ҳоло шарҳ нест",
+  writeComment: "Шарҳ нависед...",
+  newAd: "➕ Эълони нав", title: "Ном", price: "Нарх (TJS)",
+  phone: "📞 Рақами телефон", description: "Тавсиф", publish: "⚡ Нашр кардан",
+  editProfile: "✏️ Профилро таҳрир кунед", changeAvatar: "📷 Сурат бор кунед",
+  myAdsCount: "Эълонҳо", favsCount: "Дӯстдошта", viewsCount: "Дидашуда",
+  followers: "Обуначиён", following: "Обуна",
+  notifications: "Огоҳиномаҳо", verification: "Тасдиқ", security: "Бехатарӣ",
+  language: "Забон", help: "Кӯмак",
+  switchAccount: "🔄 Аккаунт иваз кардан", logout: "🚪 Баромадан",
+  follow: "➕ Обуна шудан", unfollow: "✓ Шумо обуна шудаед",
+  adsLabel: "🏪 Эълонҳо", followersShort: "Обунач.", followingShort: "Обуна", adsShort: "Эълон.",
+  messages: "💬 Паёмҳо", findById: "🔍 Бо ID ёфтан (ILM-XXXXX)", findBtn: "Ёфтан",
+  yourIdHint: "ID-и шумо: ", giveItToFriend: " — онро ба бародар ё дӯсти худ диҳед, то ӯ ба шумо нависад.",
+  noDialogs: "Чате нест. Ҳамсӯҳбатро бо ID ёбед ё ба фурӯшанда нависед.",
+  noMessages: "Ҳоло паём нест. Якум нависед 👇",
+  messageInput: "Паём...", recording: "● Сабт меравад... тугмаро раҳо кунед",
+  online: "🟢 дар тамос", voiceMsg: "🎤 Овозӣ", stickerLabel: "Стикер",
+  deleteChat: "Чатро тоза кардан", deleteMsg: "Тоза кардан", confirmDeleteChat: "Тамоми чатро тоза кунам? Барқарорнопазир.",
+  confirmDeleteMsg: "Ин паёмро тоза кунам?",
+  sortMode: "Тартиб", post: "Гузоштан", bot: "IlmBot", askBot: "Чизе пурсед...",
+  langTitle: "Забонро интихоб кунед",
+};
+
+const T_EN: typeof T_RU = {
+  home: "Home", search: "Search", sell: "Sell", chats: "Chats", favs: "Favs", profile: "Profile",
+  login: "Log in", register: "Sign up", myAccounts: "My accounts",
+  loginTitle: "Log in", regStep1: "Sign up · Step 1", regStep2: "Sign up · Step 2",
+  email: "📧 Email (name@mail.com)", nickname: "👤 Nickname", password: "🔒 Password (min 4)",
+  passwordRepeat: "🔒 Repeat password", next: "Next →", back: "← Back",
+  selectRole: "Choose role:", buyer: "Buyer", seller: "Seller",
+  createAccount: "Create account ✓", creating: "Creating...",
+  homeBanner1: "Find. Sell. Buy.", homeBanner2: "All on IlmTech ⚡",
+  adsCount: "ads", noAds: "No ads yet. Be the first! 🚀",
+  sortNew: "Newest", sortAsc: "Price ↑", sortDesc: "Price ↓",
+  more: "More", allCategories: "All categories",
+  searchPlaceholder: "iPhone, BMW, apartment...",
+  priceFrom: "Price from", priceTo: "Price to", foundCount: "Found",
+  call: "📞 Call", write: "💬 Message", myAd: "This is your ad",
+  commentsCount: "Comments", noComments: "No comments yet",
+  writeComment: "Write a comment...",
+  newAd: "➕ New ad", title: "Title", price: "Price (TJS)",
+  phone: "📞 Phone number", description: "Description", publish: "⚡ Publish",
+  editProfile: "✏️ Edit profile", changeAvatar: "📷 Upload photo",
+  myAdsCount: "Ads", favsCount: "Favs", viewsCount: "Views",
+  followers: "Followers", following: "Following",
+  notifications: "Notifications", verification: "Verification", security: "Security",
+  language: "Language", help: "Help",
+  switchAccount: "🔄 Switch account", logout: "🚪 Log out",
+  follow: "➕ Follow", unfollow: "✓ Following",
+  adsLabel: "🏪 Ads", followersShort: "Followers", followingShort: "Following", adsShort: "Ads",
+  messages: "💬 Messages", findById: "🔍 Find by ID (ILM-XXXXX)", findBtn: "Find",
+  yourIdHint: "Your ID: ", giveItToFriend: " — give it to a friend so they can message you from another device.",
+  noDialogs: "No chats yet. Find someone by ID or message a seller from a card.",
+  noMessages: "No messages yet. Be the first 👇",
+  messageInput: "Message...", recording: "● Recording... release the button",
+  online: "🟢 online", voiceMsg: "🎤 Voice", stickerLabel: "Sticker",
+  deleteChat: "Delete chat", deleteMsg: "Delete", confirmDeleteChat: "Delete entire chat? This cannot be undone.",
+  confirmDeleteMsg: "Delete this message?",
+  sortMode: "Sort", post: "Post", bot: "IlmBot", askBot: "Ask something...",
+  langTitle: "Choose language",
+};
+
+const TRANSLATIONS: Record<Lang, typeof T_RU> = { ru: T_RU, tg: T_TG, en: T_EN };
+
+
+/* ════════════════════════════════════════════════════════════════════════════
    РАЗДЕЛ 4. ЛОКАЛЬНОЕ ХРАНИЛИЩЕ (только сессия и избранное; основные данные — в Supabase)
    ════════════════════════════════════════════════════════════════════════════ */
 
@@ -558,6 +701,8 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [follows, setFollows] = useState<Follow[]>([]);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null); // чей профиль смотрим
+  const [followsListView, setFollowsListView] = useState<{ userId: string; mode: "followers" | "following" } | null>(null);
+  const [followListMode, setFollowListMode] = useState<{ userId: string; type: "followers" | "following" } | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [knownIds, setKnownIds] = useState<string[]>([]);
@@ -607,6 +752,10 @@ export default function App() {
   const [newNick, setNewNick] = useState("");
   const [avatarPicker, setAvatarPicker] = useState(false);
   const [allCatsOpen, setAllCatsOpen] = useState(false);
+  const [lang, setLang] = useState<Lang>(() => (local.get<Lang>("ilm_lang", "ru") || "ru"));
+  const [langPickerOpen, setLangPickerOpen] = useState(false);
+  const t = TRANSLATIONS[lang];
+  const setLangAndSave = (l: Lang) => { setLang(l); local.set("ilm_lang", l); };
 
   /* ---- чат ---- */
   const [chatPartnerId, setChatPartnerId] = useState<string | null>(null);
@@ -1078,7 +1227,7 @@ export default function App() {
   /** Удалить всю переписку с собеседником */
   const deleteChat = async (partnerId: string) => {
     if (!currentUser) return;
-    if (!window.confirm("Удалить всю переписку? Это нельзя отменить.")) return;
+    if (!window.confirm(t.confirmDeleteChat)) return;
     await apiDeleteConversation(currentUser.id, partnerId);
     setMessages((prev) => prev.filter((m) =>
       !((m.fromId === currentUser.id && m.toId === partnerId) ||
@@ -1094,7 +1243,7 @@ export default function App() {
     const m = messages.find((x) => x.id === messageId);
     if (!m) return;
     if (m.fromId !== currentUser.id) { showToast("Можно удалять только свои сообщения", "err"); return; }
-    if (!window.confirm("Удалить это сообщение?")) return;
+    if (!window.confirm(t.confirmDeleteMsg)) return;
     await apiDeleteMessage(messageId);
     setMessages((prev) => prev.filter((x) => x.id !== messageId));
     showToast("Сообщение удалено", "ok");
@@ -1269,17 +1418,17 @@ export default function App() {
 
           {authView === "welcome" && (
             <div className="space-y-3">
-              <button onClick={() => { setAuthView("login"); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">Войти</button>
-              <button onClick={() => { setAuthView("register"); setAuthStep(1); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gray-100 border border-emerald-300 font-bold text-lg active:scale-95 transition">Зарегистрироваться</button>
+              <button onClick={() => { setAuthView("login"); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">{t.login}</button>
+              <button onClick={() => { setAuthView("register"); setAuthStep(1); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gray-100 border border-emerald-300 font-bold text-lg active:scale-95 transition">{t.register}</button>
               {knownAccounts.length > 0 && (
-                <button onClick={() => setAuthView("accounts")} className="w-full py-3 rounded-2xl bg-gray-100 border border-gray-300 font-bold text-sm active:scale-95 transition">🔄 Мои аккаунты ({knownAccounts.length})</button>
+                <button onClick={() => setAuthView("accounts")} className="w-full py-3 rounded-2xl bg-gray-100 border border-gray-300 font-bold text-sm active:scale-95 transition">🔄 {t.myAccounts} ({knownAccounts.length})</button>
               )}
             </div>
           )}
 
           {authView === "accounts" && (
             <div className="space-y-3">
-              <h2 className="text-xl font-bold mb-2">🔄 Мои аккаунты</h2>
+              <h2 className="text-xl font-bold mb-2">🔄 {t.myAccounts}</h2>
               <p className="text-gray-500 text-xs mb-2">Аккаунты, в которые ты входил на этом устройстве.</p>
               {knownAccounts.length === 0 && <p className="text-gray-400 text-sm text-center py-4">Пока нет сохранённых аккаунтов</p>}
               {knownAccounts.map((u) => (
@@ -1292,45 +1441,45 @@ export default function App() {
                   <span className="text-emerald-600 text-sm">Войти →</span>
                 </button>
               ))}
-              <button onClick={() => setAuthView("welcome")} className="w-full py-2 text-gray-500 text-sm">← Назад</button>
+              <button onClick={() => setAuthView("welcome")} className="w-full py-2 text-gray-500 text-sm">{t.back}</button>
             </div>
           )}
 
           {authView === "login" && (
             <div className="space-y-3">
-              <h2 className="text-xl font-bold mb-2">Вход</h2>
-              <input value={loginNick} onChange={(e) => setLoginNick(e.target.value)} placeholder="👤 Никнейм" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-              <input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doLogin()} placeholder="🔒 Пароль" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <h2 className="text-xl font-bold mb-2">{t.loginTitle}</h2>
+              <input value={loginNick} onChange={(e) => setLoginNick(e.target.value)} placeholder={t.nickname} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doLogin()} placeholder={t.password} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
               <button onClick={doLogin} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "..." : "Войти →"}</button>
-              <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-gray-500 text-sm">← Назад</button>
+              <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-gray-500 text-sm">{t.back}</button>
             </div>
           )}
 
           {authView === "register" && authStep === 1 && (
             <div className="space-y-3">
-              <h2 className="text-xl font-bold mb-2">Регистрация · Шаг 1</h2>
-              <input value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="📧 Почта (name@mail.com)" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-              <input value={authNick} onChange={(e) => setAuthNick(e.target.value)} placeholder="👤 Никнейм" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-              <input type="password" value={authPass} onChange={(e) => setAuthPass(e.target.value)} placeholder="🔒 Пароль (мин. 4)" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-              <input type="password" value={authPass2} onChange={(e) => setAuthPass2(e.target.value)} placeholder="🔒 Повторите пароль" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <h2 className="text-xl font-bold mb-2">{t.regStep1}</h2>
+              <input value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder={t.email} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input value={authNick} onChange={(e) => setAuthNick(e.target.value)} placeholder={t.nickname} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input type="password" value={authPass} onChange={(e) => setAuthPass(e.target.value)} placeholder={t.password} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input type="password" value={authPass2} onChange={(e) => setAuthPass2(e.target.value)} placeholder={t.passwordRepeat} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
-              <button onClick={regStep1} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition">Далее →</button>
-              <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-gray-500 text-sm">← Назад</button>
+              <button onClick={regStep1} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition">{t.next}</button>
+              <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-gray-500 text-sm">{t.back}</button>
             </div>
           )}
 
           {authView === "register" && authStep === 2 && (
             <div className="space-y-3">
-              <h2 className="text-xl font-bold mb-2">Регистрация · Шаг 2</h2>
-              <p className="text-gray-500 text-sm">Выберите роль:</p>
+              <h2 className="text-xl font-bold mb-2">{t.regStep2}</h2>
+              <p className="text-gray-500 text-sm">{t.selectRole}</p>
               <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => setAuthRole("buyer")} className={`py-6 rounded-2xl border-2 font-bold transition ${authRole === "buyer" ? "border-emerald-500 bg-emerald-100" : "border-gray-300 bg-gray-100"}`}><div className="text-3xl mb-1">🛒</div>Покупатель</button>
-                <button onClick={() => setAuthRole("seller")} className={`py-6 rounded-2xl border-2 font-bold transition ${authRole === "seller" ? "border-red-400 bg-red-100" : "border-gray-300 bg-gray-100"}`}><div className="text-3xl mb-1">🏪</div>Продавец</button>
+                <button onClick={() => setAuthRole("buyer")} className={`py-6 rounded-2xl border-2 font-bold transition ${authRole === "buyer" ? "border-emerald-500 bg-emerald-100" : "border-gray-300 bg-gray-100"}`}><div className="text-3xl mb-1">🛒</div>{t.buyer}</button>
+                <button onClick={() => setAuthRole("seller")} className={`py-6 rounded-2xl border-2 font-bold transition ${authRole === "seller" ? "border-red-400 bg-red-100" : "border-gray-300 bg-gray-100"}`}><div className="text-3xl mb-1">🏪</div>{t.seller}</button>
               </div>
               {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
-              <button onClick={finishRegister} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "Создаём..." : "Создать аккаунт ✓"}</button>
-              <button onClick={() => setAuthStep(1)} className="w-full py-2 text-gray-500 text-sm">← Назад</button>
+              <button onClick={finishRegister} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? t.creating : t.createAccount}</button>
+              <button onClick={() => setAuthStep(1)} className="w-full py-2 text-gray-500 text-sm">{t.back}</button>
             </div>
           )}
         </div>
@@ -1355,7 +1504,7 @@ export default function App() {
           <span className="font-black text-lg bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">IlmTech</span>
         </div>
         <div className="flex items-center gap-2">
-          {isSeller && <button onClick={() => setScreen("add")} className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm font-bold shadow-md active:scale-95 transition">➕ Подать</button>}
+          {isSeller && <button onClick={() => setScreen("add")} className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm font-bold shadow-md active:scale-95 transition">➕ {t.post}</button>}
           <button onClick={() => setScreen("profile")} className="active:scale-90 transition"><AvatarView user={currentUser} size={34} /></button>
         </div>
       </header>
@@ -1365,8 +1514,8 @@ export default function App() {
           <div className="h-full overflow-y-auto p-4 space-y-4">
             <div className="rounded-3xl bg-gradient-to-r from-emerald-500 to-green-500 text-white p-6 shadow-xl relative overflow-hidden">
               <div className="absolute -right-4 -top-4 text-7xl opacity-20">⚡</div>
-              <h2 className="text-2xl font-black leading-tight relative">Найди. Продай. Купи.</h2>
-              <p className="text-gray-900/80 relative">Всё на IlmTech ⚡</p>
+              <h2 className="text-2xl font-black leading-tight relative">{t.homeBanner1}</h2>
+              <p className="text-gray-900/80 relative">{t.homeBanner2}</p>
             </div>
 
             <div className="grid grid-cols-6 gap-2">
@@ -1380,17 +1529,17 @@ export default function App() {
               <button onClick={() => setAllCatsOpen(true)}
                 className="aspect-square flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50 text-emerald-700 font-medium active:scale-90 transition">
                 <span className="text-lg">➕</span>
-                <span className="leading-none mt-0.5" style={{ fontSize: "9px" }}>Ещё</span>
+                <span className="leading-none mt-0.5" style={{ fontSize: "9px" }}>{t.more}</span>
               </button>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-gray-500 text-sm">{homeProducts.length} объявлений</span>
-              <button onClick={() => setSortMode(sortMode === "new" ? "asc" : sortMode === "asc" ? "desc" : "new")} className="px-3 py-1.5 rounded-xl bg-gray-100 text-sm border border-gray-300">{sortMode === "new" ? "Новые" : sortMode === "asc" ? "Цена ↑" : "Цена ↓"}</button>
+              <span className="text-gray-500 text-sm">{homeProducts.length} {t.adsCount}</span>
+              <button onClick={() => setSortMode(sortMode === "new" ? "asc" : sortMode === "asc" ? "desc" : "new")} className="px-3 py-1.5 rounded-xl bg-gray-100 text-sm border border-gray-300">{sortMode === "new" ? t.sortNew : sortMode === "asc" ? t.sortAsc : t.sortDesc}</button>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {homeProducts.length === 0 && <p className="col-span-full text-center text-gray-400 py-10">Объявлений пока нет. Будь первым! 🚀</p>}
+              {homeProducts.length === 0 && <p className="col-span-full text-center text-gray-400 py-10">{t.noAds}</p>}
               {homeProducts.map((p) => <ProductCard key={p.id} p={p} fav={favorites.includes(p.id)} mine={p.sellerId === currentUser.id} onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} />)}
             </div>
           </div>
@@ -1398,14 +1547,14 @@ export default function App() {
 
         {screen === "search" && (
           <div className="h-full overflow-y-auto p-4 space-y-3">
-            <h2 className="text-xl font-bold">🔍 Поиск</h2>
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="iPhone, BMW, квартира..." className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+            <h2 className="text-xl font-bold">🔍 {t.search}</h2>
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.searchPlaceholder} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
             <div className="flex gap-2 overflow-x-auto pb-1">{CATEGORIES.map((c) => <button key={c.key} onClick={() => setSearchCat(c.key)} className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm border ${searchCat === c.key ? "bg-emerald-500 border-emerald-400" : "bg-white border-gray-200"}`}>{c.emoji} {c.key}</button>)}</div>
             <div className="flex gap-2">
-              <input value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} inputMode="numeric" placeholder="Цена от" className="w-1/2 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-              <input value={priceTo} onChange={(e) => setPriceTo(e.target.value)} inputMode="numeric" placeholder="Цена до" className="w-1/2 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} inputMode="numeric" placeholder={t.priceFrom} className="w-1/2 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input value={priceTo} onChange={(e) => setPriceTo(e.target.value)} inputMode="numeric" placeholder={t.priceTo} className="w-1/2 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
             </div>
-            <span className="text-gray-500 text-sm">Найдено: {searchResults.length}</span>
+            <span className="text-gray-500 text-sm">{t.foundCount}: {searchResults.length}</span>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">{searchResults.map((p) => <ProductCard key={p.id} p={p} fav={favorites.includes(p.id)} mine={p.sellerId === currentUser.id} onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} />)}</div>
           </div>
         )}
@@ -1413,7 +1562,7 @@ export default function App() {
         {screen === "add" && (
           <div className="h-full overflow-y-auto p-4 flex justify-center">
             <div className="w-full max-w-xl space-y-3">
-              <h2 className="text-xl font-bold">➕ Новое объявление</h2>
+              <h2 className="text-xl font-bold">{t.newAd}</h2>
               <div className="grid grid-cols-4 gap-2">
                 {npImages.map((img, i) => (
                   <div key={i} className="relative rounded-xl overflow-hidden border border-gray-300" style={{ aspectRatio: "1/1" }}>
@@ -1424,20 +1573,20 @@ export default function App() {
                 ))}
                 {npImages.length < 4 && <label className="flex items-center justify-center rounded-xl border-2 border-dashed border-gray-400 cursor-pointer text-2xl" style={{ aspectRatio: "1/1" }}>＋<input type="file" accept="image/*" multiple className="hidden" onChange={handleAddImages} /></label>}
               </div>
-              <input value={npTitle} onChange={(e) => setNpTitle(e.target.value)} placeholder="Название" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-              <input value={npPrice} onChange={(e) => setNpPrice(e.target.value)} inputMode="numeric" placeholder="Цена (TJS)" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input value={npTitle} onChange={(e) => setNpTitle(e.target.value)} placeholder={t.title} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <input value={npPrice} onChange={(e) => setNpPrice(e.target.value)} inputMode="numeric" placeholder={t.price} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               <select value={npCat} onChange={(e) => setNpCat(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none">{CATEGORIES.filter((c) => c.key !== "Все").map((c) => <option key={c.key}>{c.key}</option>)}</select>
               <select value={npCity} onChange={(e) => setNpCity(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none">{CITIES.map((c) => <option key={c}>{c}</option>)}</select>
-              <input value={npPhone} onChange={(e) => setNpPhone(e.target.value)} placeholder="📞 Номер телефона" className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-              <textarea value={npDesc} onChange={(e) => setNpDesc(e.target.value)} placeholder="Описание" rows={3} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-              <button onClick={publishProduct} className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">⚡ Опубликовать</button>
+              <input value={npPhone} onChange={(e) => setNpPhone(e.target.value)} placeholder={t.phone} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <textarea value={npDesc} onChange={(e) => setNpDesc(e.target.value)} placeholder={t.description} rows={3} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <button onClick={publishProduct} className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">{t.publish}</button>
             </div>
           </div>
         )}
 
         {screen === "favorites" && (
           <div className="h-full overflow-y-auto p-4 space-y-3">
-            <h2 className="text-xl font-bold">❤️ Избранное</h2>
+            <h2 className="text-xl font-bold">❤️ {t.favs}</h2>
             {favProducts.length === 0 ? <p className="text-gray-500 text-center py-10">Пока пусто. Жми ❤️ на товарах.</p> : <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">{favProducts.map((p) => <ProductCard key={p.id} p={p} fav onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} mine={p.sellerId === currentUser.id} />)}</div>}
           </div>
         )}
@@ -1445,10 +1594,10 @@ export default function App() {
         {screen === "messages" && !chatPartnerId && (
           <div className="h-full overflow-y-auto p-4 flex justify-center">
             <div className="w-full max-w-2xl space-y-3">
-              <h2 className="text-xl font-bold">💬 Сообщения</h2>
+              <h2 className="text-xl font-bold">{t.messages}</h2>
               <div className="flex gap-2">
-                <input value={findId} onChange={(e) => setFindId(e.target.value)} placeholder="🔍 Найти по ID (ILM-XXXXX)" onKeyDown={(e) => e.key === "Enter" && findUserById()} className="flex-1 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500 uppercase" />
-                <button onClick={findUserById} className="px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md">Найти</button>
+                <input value={findId} onChange={(e) => setFindId(e.target.value)} placeholder={t.findById} onKeyDown={(e) => e.key === "Enter" && findUserById()} className="flex-1 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500 uppercase" />
+                <button onClick={findUserById} className="px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md">{t.findBtn}</button>
               </div>
               <p className="text-xs text-gray-400">Твой ID: <b className="text-emerald-600">{currentUser.id}</b> — дай его другу или брату, чтобы он написал тебе с другого ноутбука.</p>
               {conversations.length === 0 ? <p className="text-gray-500 text-center py-10">Нет диалогов. Найди человека по ID или напиши продавцу из карточки.</p> : (
@@ -1520,32 +1669,34 @@ export default function App() {
 
                 {/* Подписчики / подписки */}
                 <div className="mt-4 flex items-center justify-center gap-6">
-                  <div className="text-center">
+                  <button onClick={() => setFollowsListView({ userId: currentUser.id, mode: "followers" })} className="text-center active:scale-95 transition">
                     <div className="text-2xl font-black text-emerald-600">{followersCount(currentUser.id)}</div>
-                    <div className="text-xs text-gray-500">Подписчики</div>
-                  </div>
+                    <div className="text-xs text-gray-500">{t.followers}</div>
+                  </button>
                   <div className="w-px h-10 bg-gray-200" />
-                  <div className="text-center">
+                  <button onClick={() => setFollowsListView({ userId: currentUser.id, mode: "following" })} className="text-center active:scale-95 transition">
                     <div className="text-2xl font-black text-emerald-600">{followingCount(currentUser.id)}</div>
-                    <div className="text-xs text-gray-500">Подписки</div>
-                  </div>
+                    <div className="text-xs text-gray-500">{t.following}</div>
+                  </button>
                 </div>
 
-                <div className="mt-4"><button onClick={() => { setEditingNick(!editingNick); setNewNick(currentUser.nickname); }} className="px-4 py-2 rounded-xl bg-gray-100 border border-gray-300 text-sm">✏️ Редактировать профиль</button></div>
+                <div className="mt-4"><button onClick={() => { setEditingNick(!editingNick); setNewNick(currentUser.nickname); }} className="px-4 py-2 rounded-xl bg-gray-100 border border-gray-300 text-sm">{t.editProfile}</button></div>
               </div>
 
               <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4"><h3 className="font-bold mb-1">🤝 Как проходят сделки на IlmTech</h3><p className="text-sm text-gray-700">Без оплаты в приложении и без комиссий. Покупатель пишет продавцу 💬, договаривается, встречаетесь лично и платите наличными.</p></div>
 
-              <div className="grid grid-cols-3 gap-2 text-center"><Stat label="Объявлений" value={myProducts.length} /><Stat label="Избранное" value={favorites.length} /><Stat label="Просмотры" value={myProducts.reduce((s, p) => s + p.views, 0)} /></div>
+              <div className="grid grid-cols-3 gap-2 text-center"><Stat label={t.myAdsCount} value={myProducts.length} /><Stat label={t.favsCount} value={favorites.length} /><Stat label={t.viewsCount} value={myProducts.reduce((s, p) => s + p.views, 0)} /></div>
 
               <div className="space-y-2">
-                {[{ e: "🔔", t: "Уведомления" }, { e: "✅", t: "Верификация" }, { e: "🛡️", t: "Безопасность" }, { e: "🌐", t: "Язык" }, { e: "❓", t: "Помощь" }].map((m) => (
-                  <button key={m.t} onClick={() => showToast(`«${m.t}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">{m.e}</span><span>{m.t}</span><span className="ml-auto text-gray-400">›</span></button>
-                ))}
+                <button onClick={() => showToast(`«${t.notifications}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">🔔</span><span>{t.notifications}</span><span className="ml-auto text-gray-400">›</span></button>
+                <button onClick={() => showToast(`«${t.verification}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">✅</span><span>{t.verification}</span><span className="ml-auto text-gray-400">›</span></button>
+                <button onClick={() => showToast(`«${t.security}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">🛡️</span><span>{t.security}</span><span className="ml-auto text-gray-400">›</span></button>
+                <button onClick={() => setLangPickerOpen(true)} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">🌐</span><span>{t.language}</span><span className="ml-auto text-emerald-600 font-semibold">{LANG_NAMES[lang]}</span></button>
+                <button onClick={() => showToast(`«${t.help}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">❓</span><span>{t.help}</span><span className="ml-auto text-gray-400">›</span></button>
               </div>
 
-              <button onClick={() => { logout(); setAuthView("accounts"); }} className="w-full py-3 rounded-xl bg-gray-100 border border-gray-300 font-bold">🔄 Сменить аккаунт</button>
-              <button onClick={logout} className="w-full py-3 rounded-xl bg-red-50 border border-red-300 text-red-600 font-bold">🚪 Выйти</button>
+              <button onClick={() => { logout(); setAuthView("accounts"); }} className="w-full py-3 rounded-xl bg-gray-100 border border-gray-300 font-bold">{t.switchAccount}</button>
+              <button onClick={logout} className="w-full py-3 rounded-xl bg-red-50 border border-red-300 text-red-600 font-bold">{t.logout}</button>
             </div>
           </div>
         )}
@@ -1556,21 +1707,21 @@ export default function App() {
 
         {botOpen && (
           <div className="absolute bottom-3 right-3 flex flex-col bg-white border border-emerald-300 rounded-2xl overflow-hidden shadow-2xl" style={{ width: "min(360px, calc(100% - 24px))", height: "min(72%, 540px)" }}>
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-500"><span className="font-bold">🤖 IlmBot</span><button onClick={() => setBotOpen(false)} className="text-xl">✕</button></div>
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-500"><span className="font-bold">🤖 {t.bot}</span><button onClick={() => setBotOpen(false)} className="text-xl">✕</button></div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">{botMsgs.map((m, i) => <div key={i} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}><div className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-line ${m.from === "user" ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-900"}`} style={{ maxWidth: "82%" }}>{m.text}</div></div>)}<div ref={botEndRef} /></div>
             <div className="px-3 pb-2 flex flex-wrap gap-1">{BOT_QUICK.map((q) => <button key={q} onClick={() => sendBot(q)} className="text-xs px-2 py-1 rounded-lg bg-gray-100 border border-gray-300">{q}</button>)}</div>
-            <div className="flex gap-2 p-3 border-t border-gray-200"><input value={botInput} onChange={(e) => setBotInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendBot()} placeholder="Спроси что-нибудь..." className="flex-1 px-3 py-2 rounded-xl bg-gray-100 border border-gray-300 outline-none text-sm" /><button onClick={() => sendBot()} className="px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold">➤</button></div>
+            <div className="flex gap-2 p-3 border-t border-gray-200"><input value={botInput} onChange={(e) => setBotInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendBot()} placeholder={t.askBot} className="flex-1 px-3 py-2 rounded-xl bg-gray-100 border border-gray-300 outline-none text-sm" /><button onClick={() => sendBot()} className="px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold">➤</button></div>
           </div>
         )}
       </main>
 
       <nav className="relative z-10 shrink-0 flex items-center justify-around bg-white/90 backdrop-blur-xl border-t border-emerald-100 py-2">
-        <NavBtn emoji="🏠" label="Главная" active={screen === "home"} onClick={() => setScreen("home")} />
-        <NavBtn emoji="🔍" label="Поиск" active={screen === "search"} onClick={() => setScreen("search")} />
-        {isSeller && <NavBtn emoji="➕" label="Продать" active={screen === "add"} onClick={() => setScreen("add")} />}
-        <NavBtn emoji="💬" label="Чаты" active={screen === "messages"} onClick={() => { setScreen("messages"); setChatPartnerId(null); }} badge={totalUnread} />
-        <NavBtn emoji="❤️" label="Избр." active={screen === "favorites"} onClick={() => setScreen("favorites")} badge={favorites.length} />
-        <NavBtn emoji="👤" label="Профиль" active={screen === "profile"} onClick={() => setScreen("profile")} />
+        <NavBtn emoji="🏠" label={t.home} active={screen === "home"} onClick={() => setScreen("home")} />
+        <NavBtn emoji="🔍" label={t.search} active={screen === "search"} onClick={() => setScreen("search")} />
+        {isSeller && <NavBtn emoji="➕" label={t.sell} active={screen === "add"} onClick={() => setScreen("add")} />}
+        <NavBtn emoji="💬" label={t.chats} active={screen === "messages"} onClick={() => { setScreen("messages"); setChatPartnerId(null); }} badge={totalUnread} />
+        <NavBtn emoji="❤️" label={t.favs} active={screen === "favorites"} onClick={() => setScreen("favorites")} badge={favorites.length} />
+        <NavBtn emoji="👤" label={t.profile} active={screen === "profile"} onClick={() => setScreen("profile")} />
       </nav>
 
       {openProduct && (
@@ -1593,7 +1744,7 @@ export default function App() {
         <div className="absolute inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setAllCatsOpen(false)}>
           <div onClick={(e) => e.stopPropagation()} className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl" style={{ maxHeight: "85%", overflowY: "auto" }}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-black text-gray-900">Все категории</h2>
+              <h2 className="text-xl font-black text-gray-900">{t.allCategories}</h2>
               <button onClick={() => setAllCatsOpen(false)} className="w-9 h-9 rounded-full bg-gray-100 text-lg active:scale-90 transition">✕</button>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -1615,7 +1766,7 @@ export default function App() {
         if (!target) return null;
         const targetFollowers = followersCount(target.id);
         const targetFollowing = followingCount(target.id);
-        const targetProducts = products.filter((p) => p.sellerId === target.id).length;
+        const targetProducts = products.filter((p) => p.sellerId === target.id);
         const following = amIFollowing(target.id);
         const isMe = target.id === currentUser.id;
         return (
@@ -1634,11 +1785,11 @@ export default function App() {
                 </p>
 
                 <div className="mt-4 flex items-center justify-center gap-4">
-                  <div className="text-center"><div className="text-xl font-black text-emerald-600">{targetProducts}</div><div className="text-xs text-gray-500">Объявл.</div></div>
+                  <div className="text-center"><div className="text-xl font-black text-emerald-600">{targetProducts.length}</div><div className="text-xs text-gray-500">{t.adsShort}</div></div>
                   <div className="w-px h-10 bg-gray-200" />
-                  <div className="text-center"><div className="text-xl font-black text-emerald-600">{targetFollowers}</div><div className="text-xs text-gray-500">Подписч.</div></div>
+                  <button onClick={() => setFollowsListView({ userId: target.id, mode: "followers" })} className="text-center active:scale-95 transition"><div className="text-xl font-black text-emerald-600">{targetFollowers}</div><div className="text-xs text-gray-500">{t.followersShort}</div></button>
                   <div className="w-px h-10 bg-gray-200" />
-                  <div className="text-center"><div className="text-xl font-black text-emerald-600">{targetFollowing}</div><div className="text-xs text-gray-500">Подписки</div></div>
+                  <button onClick={() => setFollowsListView({ userId: target.id, mode: "following" })} className="text-center active:scale-95 transition"><div className="text-xl font-black text-emerald-600">{targetFollowing}</div><div className="text-xs text-gray-500">{t.following}</div></button>
                 </div>
 
                 {!isMe && (
@@ -1647,21 +1798,113 @@ export default function App() {
                       onClick={() => toggleFollow(target.id)}
                       className={`py-3 rounded-xl font-bold shadow-md active:scale-95 transition ${following ? "bg-gray-200 text-gray-700 border border-gray-300" : "bg-gradient-to-r from-emerald-500 to-green-500 text-white"}`}
                     >
-                      {following ? "✓ Вы подписаны" : "➕ Подписаться"}
+                      {following ? t.unfollow : t.follow}
                     </button>
                     <button
                       onClick={() => { setViewingProfileId(null); openChatWith(target.id); }}
                       className="py-3 rounded-xl font-bold bg-white border-2 border-emerald-500 text-emerald-600 active:scale-95 transition"
                     >
-                      💬 Написать
+                      {t.write}
                     </button>
                   </div>
                 )}
               </div>
+
+              {/* Объявления пользователя */}
+              {targetProducts.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    🏪 Объявления ({targetProducts.length})
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {targetProducts.map((p) => (
+                      <ProductCard
+                        key={p.id}
+                        p={p}
+                        fav={favorites.includes(p.id)}
+                        mine={p.sellerId === currentUser.id}
+                        onOpen={() => { setViewingProfileId(null); openCard(p); }}
+                        onFav={() => toggleFav(p.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
       })()}
+
+      {/* Модалка списка подписчиков / подписок */}
+      {followsListView && (() => {
+        const ownerUser = users.find((u) => u.id === followsListView.userId);
+        const list: User[] = followsListView.mode === "followers"
+          ? follows.filter((f) => f.followingId === followsListView.userId).map((f) => users.find((u) => u.id === f.followerId)).filter((x): x is User => !!x)
+          : follows.filter((f) => f.followerId === followsListView.userId).map((f) => users.find((u) => u.id === f.followingId)).filter((x): x is User => !!x);
+        const title = followsListView.mode === "followers" ? "Подписчики" : "Подписки";
+        return (
+          <div className="absolute inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setFollowsListView(null)}>
+            <div onClick={(e) => e.stopPropagation()} className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl" style={{ maxHeight: "85%", overflowY: "auto" }}>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-black text-gray-900">{title}</h2>
+                  {ownerUser && <p className="text-xs text-gray-500">{ownerUser.nickname}</p>}
+                </div>
+                <button onClick={() => setFollowsListView(null)} className="w-9 h-9 rounded-full bg-gray-100 text-lg active:scale-90 transition">✕</button>
+              </div>
+              {list.length === 0 ? (
+                <p className="text-center text-gray-400 py-8 text-sm">
+                  {followsListView.mode === "followers" ? "Пока никого 😊" : "Пока ни на кого не подписан"}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {list.map((u) => (
+                    <button
+                      key={u.id}
+                      onClick={() => { setFollowsListView(null); setViewingProfileId(u.id); }}
+                      className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white border border-gray-200 active:scale-[0.98] transition text-left"
+                    >
+                      <AvatarView user={u} size={44} showOnline />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold truncate inline-flex items-center gap-1">
+                          {u.nickname}
+                          <VerifyMark followers={followersCount(u.id)} size={12} />
+                        </div>
+                        <div className="text-xs text-gray-400">{u.role === "seller" ? "🏪 Продавец" : "🛒 Покупатель"} · {u.id}</div>
+                      </div>
+                      <span className="text-emerald-600 text-sm">›</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Модалка выбора языка */}
+      {langPickerOpen && (
+        <div className="absolute inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setLangPickerOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-black text-gray-900">🌐 {t.langTitle}</h2>
+              <button onClick={() => setLangPickerOpen(false)} className="w-9 h-9 rounded-full bg-gray-100 text-lg active:scale-90 transition">✕</button>
+            </div>
+            <div className="space-y-2">
+              {(["ru", "tg", "en"] as Lang[]).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => { setLangAndSave(l); setLangPickerOpen(false); showToast("✓ " + LANG_NAMES[l], "ok"); }}
+                  className={`w-full flex items-center justify-between p-4 rounded-xl border-2 active:scale-95 transition ${lang === l ? "border-emerald-500 bg-emerald-50" : "border-gray-200 bg-white"}`}
+                >
+                  <span className="font-bold text-gray-900">{LANG_NAMES[l]}</span>
+                  {lang === l && <span className="text-emerald-600 text-xl">✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && <ToastView toast={toast} />}
     </div>
