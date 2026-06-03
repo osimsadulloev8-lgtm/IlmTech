@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+\import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createClient, RealtimeChannel } from "@supabase/supabase-js";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════
