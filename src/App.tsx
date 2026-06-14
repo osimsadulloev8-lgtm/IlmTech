@@ -136,6 +136,40 @@ const productEmoji: Record<string, string> = {
   Книги: "📚", Продукты: "🍎", Работа: "💼", Услуги: "🔧", Хобби: "🎨", Музыка: "🎸",
 };
 
+/* ────────────────────────────────────────────────────────────────────────────
+   ИКОНКИ КАТЕГОРИЙ — нарисованные SVG (стиль линий, как у Avito/Lucide).
+   Цвет берётся из currentColor, поэтому управляется классом text-* у родителя.
+   ──────────────────────────────────────────────────────────────────────────── */
+const CAT_ICON_PATHS: Record<string, string> = {
+  "Все": '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  "Электроника": '<rect x="5" y="2" width="14" height="20" rx="2.5"/><path d="M11 18h2"/>',
+  "Авто": '<path d="M5 13l1.5-4.5A2 2 0 0 1 8.4 7h7.2a2 2 0 0 1 1.9 1.5L19 13"/><path d="M4 13h16a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1"/><path d="M6 18H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1"/><circle cx="7.5" cy="17.5" r="1.6"/><circle cx="16.5" cy="17.5" r="1.6"/><path d="M9.5 17.5h5"/>',
+  "Недвижимость": '<path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 21v-7h6v7"/>',
+  "Одежда": '<path d="M8 3l-5 3 2 4 2-1v9a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-9l2 1 2-4-5-3a3 3 0 0 1-6 0z"/>',
+  "Обувь": '<path d="M3 8v4c0 1-.3 2-1 3l-.7 1.2a1 1 0 0 0 .9 1.8H20a3 3 0 0 0 3-3c0-1.4-1-2.3-2.4-2.7l-5-1.6c-.6-.2-1-.5-1.4-1L11.2 5.5C10.8 5 10.2 4.7 9.5 4.7H4a1 1 0 0 0-1 1z"/><path d="m6.5 11.5 1.5-1"/><path d="m9.5 13 1.5-1"/>',
+  "Красота": '<path d="M11.5 3.5 13 8.5 18 10l-5 1.5L11.5 16.5 10 11.5 5 10l5-1.5z"/><path d="M18 4v3"/><path d="M19.5 5.5h-3"/><path d="M5 16v2"/><path d="M6 17H4"/>',
+  "Детское": '<circle cx="12" cy="13.5" r="5.5"/><circle cx="6.8" cy="8" r="2.4"/><circle cx="17.2" cy="8" r="2.4"/><path d="M10 12.5h.01"/><path d="M14 12.5h.01"/><path d="M10.5 15.5a2 2 0 0 0 3 0"/>',
+  "Для дома": '<path d="M4 11V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 16a2 2 0 0 1 2-2 2 2 0 0 1 2 2v1h12v-1a2 2 0 0 1 2-2 2 2 0 0 1 2 2v4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/><path d="M5 21v1"/><path d="M19 21v1"/>',
+  "Техника": '<path d="M9 8V3"/><path d="M15 8V3"/><path d="M7 8h10v4a5 5 0 0 1-5 5 5 5 0 0 1-5-5z"/><path d="M12 17v4"/>',
+  "Спорт": '<circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M3.5 9.5h17"/><path d="M3.5 14.5h17"/>',
+  "Книги": '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19"/>',
+  "Продукты": '<path d="m6 9 2-5"/><path d="m18 9-2-5"/><path d="M3 9h18"/><path d="m4.5 9 1.4 8.2a2 2 0 0 0 2 1.8h8.2a2 2 0 0 0 2-1.8L19.5 9"/><path d="M5 13.5h14"/>',
+  "Работа": '<path d="M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6"/><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 12h18"/>',
+  "Услуги": '<path d="M14.5 6a3.5 3.5 0 0 0 4.6 4.6l-7.8 7.8a2.1 2.1 0 0 1-3-3l7.8-7.8A3.5 3.5 0 0 0 14.5 6z"/><path d="m17.5 6.5-2 2"/>',
+  "Хобби": '<path d="M12 3a9 9 0 1 0 0 18c1 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1a1.7 1.7 0 0 1 1.7-1.7H16a5.5 5.5 0 0 0 5.5-5.5C21.5 6 17.5 3 12 3z"/><circle cx="7.5" cy="11.5" r="1"/><circle cx="9.5" cy="7.5" r="1"/><circle cx="14.5" cy="7" r="1"/><circle cx="16.5" cy="11" r="1"/>',
+  "Музыка": '<path d="M9 18V6l11-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
+};
+
+/** Нарисованная иконка категории. Цвет = currentColor (управляется классом text-*). */
+function CategoryIcon({ name, size = 24 }: { name: string; size?: number }) {
+  const inner = CAT_ICON_PATHS[name] ?? '<circle cx="12" cy="12" r="9"/>';
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" ` +
+    `fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+    `${inner}</svg>`;
+  return <span className="inline-flex" dangerouslySetInnerHTML={{ __html: svg }} />;
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
    ЯЗЫКИ — словарь переводов
    ════════════════════════════════════════════════════════════════════════════ */
@@ -697,7 +731,6 @@ export default function App() {
   const [follows, setFollows] = useState<Follow[]>([]);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null); // чей профиль смотрим
   const [followsListView, setFollowsListView] = useState<{ userId: string; mode: "followers" | "following" } | null>(null);
-  const [followListMode, setFollowListMode] = useState<{ userId: string; type: "followers" | "following" } | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [knownIds, setKnownIds] = useState<string[]>([]);
@@ -712,7 +745,6 @@ export default function App() {
   const [authNick, setAuthNick] = useState("");
   const [authPass, setAuthPass] = useState("");
   const [authPass2, setAuthPass2] = useState("");
-  const [authRole, setAuthRole] = useState<Role>("seller");
   const [authErr, setAuthErr] = useState("");
   const [authBusy, setAuthBusy] = useState(false);
   const [loginNick, setLoginNick] = useState("");
@@ -1511,7 +1543,7 @@ export default function App() {
               {CATEGORIES.slice(0, 11).map((c) => (
                 <button key={c.key} onClick={() => setCategory(c.key)}
                   className={`aspect-square flex flex-col items-center justify-center rounded-xl border font-medium transition active:scale-90 ${category === c.key ? "bg-gradient-to-br from-emerald-500 to-green-500 text-white border-emerald-400 shadow-md" : "bg-white border-gray-200"}`}>
-                  <span className="text-lg">{c.emoji}</span>
+                  <span className={category === c.key ? "text-white" : "text-emerald-600"}><CategoryIcon name={c.key} size={24} /></span>
                   <span className="leading-none mt-0.5 text-center px-0.5" style={{ fontSize: "9px" }}>{c.key}</span>
                 </button>
               ))}
@@ -1538,7 +1570,7 @@ export default function App() {
           <div className="h-full overflow-y-auto p-4 space-y-3">
             <h2 className="text-xl font-bold">🔍 {t.search}</h2>
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.searchPlaceholder} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-            <div className="flex gap-2 overflow-x-auto pb-1">{CATEGORIES.map((c) => <button key={c.key} onClick={() => setSearchCat(c.key)} className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm border ${searchCat === c.key ? "bg-emerald-500 border-emerald-400" : "bg-white border-gray-200"}`}>{c.emoji} {c.key}</button>)}</div>
+            <div className="flex gap-2 overflow-x-auto pb-1">{CATEGORIES.map((c) => <button key={c.key} onClick={() => setSearchCat(c.key)} className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm border inline-flex items-center gap-1.5 ${searchCat === c.key ? "bg-emerald-500 border-emerald-400 text-white" : "bg-white border-gray-200 text-emerald-700"}`}><CategoryIcon name={c.key} size={15} />{c.key}</button>)}</div>
             <div className="flex gap-2">
               <input value={priceFrom} onChange={(e) => setPriceFrom(e.target.value)} inputMode="numeric" placeholder={t.priceFrom} className="w-1/2 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               <input value={priceTo} onChange={(e) => setPriceTo(e.target.value)} inputMode="numeric" placeholder={t.priceTo} className="w-1/2 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
@@ -1741,7 +1773,7 @@ export default function App() {
               {CATEGORIES.map((c) => (
                 <button key={c.key} onClick={() => { setCategory(c.key); setAllCatsOpen(false); }}
                   className={`flex flex-col items-center justify-center py-4 rounded-xl border-2 transition active:scale-95 ${category === c.key ? "bg-gradient-to-br from-emerald-500 to-green-500 text-white border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"}`}>
-                  <span className="text-3xl mb-1">{c.emoji}</span>
+                  <span className={`mb-1 ${category === c.key ? "text-white" : "text-emerald-600"}`}><CategoryIcon name={c.key} size={30} /></span>
                   <span className="text-xs font-semibold">{c.key}</span>
                 </button>
               ))}
