@@ -1,7 +1,25 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createClient, RealtimeChannel } from "@supabase/supabase-js";
 
+/* ══════════════════════════════════════════════════════════════════════════════════════
+   ███ IlmTech ███ — Маркетплейс Таджикистана (аналог Somon.tj)
+   ──────────────────────────────────────────────────────────────────────────────────────
+   Школьный проект. React + TypeScript + Tailwind + Supabase.
 
+   ★ ОБЩЕЕ ХРАНИЛИЩЕ В ИНТЕРНЕТЕ (Supabase) ★
+     Пользователи, товары и сообщения синхронизируются между разными
+     ноутбуками в реальном времени. Можно открыть с своего ноутбука и
+     с ноутбука брата — увидите данные друг друга и сможете переписываться.
+
+   Запуск:
+     1) В терминале VS Code один раз:  npm install @supabase/supabase-js
+     2) npm run dev
+     3) Открыть http://localhost:5173
+   ══════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════════════════
+   РАЗДЕЛ 1. ПОДКЛЮЧЕНИЕ К SUPABASE (общий сервер)
+   ════════════════════════════════════════════════════════════════════════════ */
 
 const SUPABASE_URL = "https://dyevvtzjuanzptzdgymf.supabase.co";
 const SUPABASE_KEY = "sb_publishable_yA0dpEk61vGM_cdbPZRcfg_zEfc9rfq";
@@ -10,7 +28,9 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   realtime: { params: { eventsPerSecond: 10 } },
 });
 
-
+/* ════════════════════════════════════════════════════════════════════════════
+   РАЗДЕЛ 2. ТИПЫ ДАННЫХ
+   ════════════════════════════════════════════════════════════════════════════ */
 
 type Screen = "home" | "search" | "add" | "favorites" | "profile" | "messages";
 type AuthView = "welcome" | "login" | "register" | "verify" | "accounts";
@@ -26,7 +46,7 @@ interface User {
   avatar: string;
   avatarIsPhoto: boolean;
   createdAt: number;
-  lastSeen: number;  
+  lastSeen: number;  // время последнего захода на сайт (для статуса «в сети»)
 }
 
 interface Comment {
@@ -56,6 +76,7 @@ interface Product {
   createdAt: number;
   badge: "VIP" | "Топ" | null;
   comments: Comment[];
+  condition?: "new" | "used"; // Новое или Б/У (старые товары без поля считаем Б/У)
   _emoji?: string;
 }
 
@@ -110,7 +131,11 @@ const CITIES = ["Душанбе", "Худжанд", "Бохтар", "Куляб"
 const AVATARS = ["😎", "🦊", "🐯", "🦁", "🐼", "🦄", "🐲", "👨‍💻", "👩‍🎓", "🧑‍🚀", "🐰", "🐸", "🦉", "🐵", "🐱"];
 const STICKERS = ["👍", "❤️", "😂", "🔥", "🎉", "👏", "😍", "🤝", "✅", "🙏", "😎", "💯", "🥳", "😅", "🤔", "👌", "🫶", "😢", "😡", "🤩", "🥰", "😜", "🤗", "😴"];
 
-
+/* ────────────────────────────────────────────────────────────────────────────
+   СОЗДАТЕЛЬ САЙТА — особая СИНЯЯ галочка, которая есть ТОЛЬКО у этого аккаунта.
+   Этот ник зарезервирован: другие пользователи не смогут его занять.
+   Если поменяешь свой ник — просто впиши сюда новый (маленькими буквами).
+   ──────────────────────────────────────────────────────────────────────────── */
 const CREATOR_NICKS = ["osimsadulloev8", "yud1x"];
 const isCreator = (nick: string | null | undefined): boolean =>
   !!nick && CREATOR_NICKS.includes(nick.trim().toLowerCase());
@@ -121,7 +146,10 @@ const productEmoji: Record<string, string> = {
   Книги: "📚", Продукты: "🍎", Работа: "💼", Услуги: "🔧", Хобби: "🎨", Музыка: "🎸",
 };
 
-
+/* ────────────────────────────────────────────────────────────────────────────
+   ИКОНКИ КАТЕГОРИЙ — нарисованные SVG (стиль линий, как у Avito/Lucide).
+   Цвет берётся из currentColor, поэтому управляется классом text-* у родителя.
+   ──────────────────────────────────────────────────────────────────────────── */
 const CAT_ICON_PATHS: Record<string, string> = {
   "Все": '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
   "Электроника": '<rect x="5" y="2" width="14" height="20" rx="2.5"/><path d="M11 18h2"/>',
@@ -152,7 +180,9 @@ function CategoryIcon({ name, size = 24 }: { name: string; size?: number }) {
   return <span className="inline-flex" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
-
+/* ════════════════════════════════════════════════════════════════════════════
+   ЯЗЫКИ — словарь переводов
+   ════════════════════════════════════════════════════════════════════════════ */
 
 type Lang = "ru" | "tg" | "en";
 
@@ -859,6 +889,36 @@ const Music = (() => {
 })();
 
 /* ════════════════════════════════════════════════════════════════════════════
+   ТЁМНАЯ ТЕМА (ночной режим). Эти правила срабатывают ТОЛЬКО когда на странице
+   стоит класс .ilm-night. В светлом режиме ничего не меняется — полностью безопасно.
+   ════════════════════════════════════════════════════════════════════════════ */
+const NIGHT_CSS = `
+html.ilm-night body { background:#0f172a; }
+html.ilm-night .ilm-app-root { background-image:none !important; background-color:#0f172a !important; }
+html.ilm-night .bg-white { background-color:#1e293b !important; }
+html.ilm-night .bg-white\\/90 { background-color:rgba(30,41,59,0.92) !important; }
+html.ilm-night .bg-white\\/95 { background-color:rgba(30,41,59,0.96) !important; }
+html.ilm-night .bg-gray-100 { background-color:#334155 !important; }
+html.ilm-night .bg-gray-200 { background-color:#475569 !important; }
+html.ilm-night .bg-emerald-50 { background-color:rgba(16,185,129,0.15) !important; }
+html.ilm-night .bg-orange-50 { background-color:rgba(249,115,22,0.15) !important; }
+html.ilm-night .bg-red-50 { background-color:rgba(239,68,68,0.15) !important; }
+html.ilm-night .text-gray-900 { color:#f1f5f9 !important; }
+html.ilm-night .text-gray-700 { color:#e2e8f0 !important; }
+html.ilm-night .text-gray-500 { color:#94a3b8 !important; }
+html.ilm-night .text-gray-400 { color:#64748b !important; }
+html.ilm-night .text-emerald-700 { color:#6ee7b7 !important; }
+html.ilm-night .text-orange-800 { color:#fdba74 !important; }
+html.ilm-night .border-gray-200 { border-color:#334155 !important; }
+html.ilm-night .border-gray-300 { border-color:#475569 !important; }
+html.ilm-night .border-emerald-100 { border-color:#334155 !important; }
+html.ilm-night .border-emerald-200 { border-color:#2a4a42 !important; }
+html.ilm-night .border-emerald-300 { border-color:#2a4a42 !important; }
+html.ilm-night input, html.ilm-night textarea, html.ilm-night select { color:#f1f5f9 !important; }
+html.ilm-night input::placeholder, html.ilm-night textarea::placeholder { color:#94a3b8 !important; }
+`;
+
+/* ════════════════════════════════════════════════════════════════════════════
    РАЗДЕЛ 8. ГЛАВНЫЙ КОМПОНЕНТ
    ════════════════════════════════════════════════════════════════════════════ */
 
@@ -913,6 +973,9 @@ export default function App() {
   const [npDesc, setNpDesc] = useState("");
   const [npPhone, setNpPhone] = useState("");
   const [npImages, setNpImages] = useState<string[]>([]);
+  const [npCond, setNpCond] = useState<"new" | "used">("used"); // по умолчанию Б/У
+  const [condFilter, setCondFilter] = useState<"all" | "used" | "new">("all"); // фильтр на главной
+  const [theme, setTheme] = useState<"light" | "night">(() => (local.get<string>("ilm_theme", "light") === "night" ? "night" : "light"));
 
   /* ---- профиль ---- */
   const [editingNick, setEditingNick] = useState(false);
@@ -947,6 +1010,20 @@ export default function App() {
     if (musicOn) { Music.stop(); setMusicOn(false); }
     else { musicStartedRef.current = true; Music.start(); setMusicOn(true); }
   };
+
+  /* ---- тёмная тема (ночной режим) ---- */
+  useEffect(() => {
+    // вставляем стили тёмной темы один раз
+    const el = document.createElement("style");
+    el.textContent = NIGHT_CSS;
+    document.head.appendChild(el);
+    return () => { el.remove(); };
+  }, []);
+  useEffect(() => {
+    document.documentElement.classList.toggle("ilm-night", theme === "night");
+    local.set("ilm_theme", theme);
+  }, [theme]);
+  const toggleTheme = () => setTheme((p) => (p === "night" ? "light" : "night"));
 
   /* ---- чат ---- */
   const [chatPartnerId, setChatPartnerId] = useState<string | null>(null);
@@ -1465,11 +1542,12 @@ export default function App() {
       createdAt: Date.now(),
       badge: null,
       comments: [],
+      condition: npCond,
     };
     await apiInsertProduct(np);
     setProducts((prev) => [np, ...prev]);
     setNpTitle(""); setNpPrice(""); setNpDesc(""); setNpPhone(""); setNpImages([]);
-    setNpCat("Электроника"); setNpCity("Душанбе");
+    setNpCat("Электроника"); setNpCity("Душанбе"); setNpCond("used");
     setScreen("home");
     showToast("Объявление опубликовано! ⚡", "ok");
   };
@@ -1722,11 +1800,13 @@ export default function App() {
   ════════════════════════════════════════════════════════════════════════ */
   const homeProducts = useMemo(() => {
     let list = category === "Все" ? [...products] : products.filter((p) => p.category === category);
+    if (condFilter === "used") list = list.filter((p) => (p.condition || "used") === "used");
+    else if (condFilter === "new") list = list.filter((p) => p.condition === "new");
     if (sortMode === "asc") list.sort((a, b) => a.price - b.price);
     else if (sortMode === "desc") list.sort((a, b) => b.price - a.price);
     else list.sort((a, b) => b.createdAt - a.createdAt);
     return list;
-  }, [products, category, sortMode]);
+  }, [products, category, sortMode, condFilter]);
 
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -1762,7 +1842,7 @@ export default function App() {
   ════════════════════════════════════════════════════════════════════════ */
   if (!currentUser) {
     return (
-      <div className="relative w-full min-h-screen bg-white text-gray-900 flex items-center justify-center p-4 overflow-hidden">
+      <div className="ilm-app-root relative w-full min-h-screen bg-white text-gray-900 flex items-center justify-center p-4 overflow-hidden">
         <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 rounded-full bg-emerald-200 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-red-500/30 blur-3xl" />
 
@@ -1864,7 +1944,7 @@ export default function App() {
   const isSeller = true; // все могут и продавать и покупать
 
   return (
-    <div className="relative w-full h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white text-gray-900 overflow-hidden">
+    <div className="ilm-app-root relative w-full h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white text-gray-900 overflow-hidden">
       <div className="pointer-events-none absolute -top-40 -left-40 w-96 h-96 rounded-full bg-emerald-100 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-red-100 blur-3xl" />
 
@@ -1902,6 +1982,13 @@ export default function App() {
                 <span className="text-lg">➕</span>
                 <span className="leading-none mt-0.5" style={{ fontSize: "9px" }}>{t.more}</span>
               </button>
+            </div>
+
+            <div className="flex gap-2 bg-gray-100 p-1 rounded-2xl">
+              {([["all", "🛍️ Все"], ["used", "♻️ Б/У"], ["new", "✨ Новые"]] as const).map(([key, label]) => (
+                <button key={key} onClick={() => setCondFilter(key)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-bold transition active:scale-95 ${condFilter === key ? "bg-white text-emerald-600 shadow" : "text-gray-500"}`}>{label}</button>
+              ))}
             </div>
 
             <div className="flex items-center justify-between">
@@ -1947,6 +2034,10 @@ export default function App() {
               </div>
               <input value={npTitle} onChange={(e) => setNpTitle(e.target.value)} placeholder={t.title} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               <input value={npPrice} onChange={(e) => setNpPrice(e.target.value)} inputMode="numeric" placeholder={t.price} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setNpCond("used")} className={`flex-1 py-3 rounded-xl border font-bold transition active:scale-95 ${npCond === "used" ? "bg-emerald-500 text-white border-emerald-500" : "bg-gray-100 border-gray-300 text-gray-500"}`}>♻️ Б/У</button>
+                <button type="button" onClick={() => setNpCond("new")} className={`flex-1 py-3 rounded-xl border font-bold transition active:scale-95 ${npCond === "new" ? "bg-orange-500 text-white border-orange-500" : "bg-gray-100 border-gray-300 text-gray-500"}`}>✨ Новое</button>
+              </div>
               <select value={npCat} onChange={(e) => setNpCat(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none">{CATEGORIES.filter((c) => c.key !== "Все").map((c) => <option key={c.key}>{c.key}</option>)}</select>
               <select value={npCity} onChange={(e) => setNpCity(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none">{CITIES.map((c) => <option key={c}>{c}</option>)}</select>
               <input value={npPhone} onChange={(e) => setNpPhone(e.target.value)} placeholder={t.phone} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
@@ -2063,6 +2154,7 @@ export default function App() {
                 <button onClick={() => showToast(`«${t.notifications}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">🔔</span><span>{t.notifications}</span><span className="ml-auto text-gray-400">›</span></button>
                 <button onClick={() => showToast(`«${t.verification}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">✅</span><span>{t.verification}</span><span className="ml-auto text-gray-400">›</span></button>
                 <button onClick={() => showToast(`«${t.security}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">🛡️</span><span>{t.security}</span><span className="ml-auto text-gray-400">›</span></button>
+                <button onClick={toggleTheme} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">{theme === "night" ? "🌙" : "☀️"}</span><span>Тёмная тема</span><span className={`ml-auto w-12 h-7 rounded-full p-1 transition ${theme === "night" ? "bg-emerald-500" : "bg-gray-300"}`}><span className={`block w-5 h-5 rounded-full bg-white transition-transform ${theme === "night" ? "translate-x-5" : ""}`} /></span></button>
                 <button onClick={() => setLangPickerOpen(true)} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">🌐</span><span>{t.language}</span><span className="ml-auto text-emerald-600 font-semibold">{LANG_NAMES[lang]}</span></button>
                 <button onClick={() => showToast(`«${t.help}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">❓</span><span>{t.help}</span><span className="ml-auto text-gray-400">›</span></button>
               </div>
@@ -2359,6 +2451,7 @@ function ProductCard({ p, fav, mine, onOpen, onFav }: { p: Product; fav: boolean
         {p.images.length > 0 ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" /> : <span className="text-5xl">{emoji}</span>}
         {mine ? <span className="absolute top-1 left-1 bg-blue-500 text-white px-1.5 py-0.5 rounded font-bold" style={{ fontSize: "9px" }}>Моё</span> : p.badge ? <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded font-bold ${p.badge === "VIP" ? "bg-amber-400 text-gray-900" : "bg-red-500 text-white"}`} style={{ fontSize: "9px" }}>{p.badge}</span> : null}
         <button onClick={(e) => { e.stopPropagation(); onFav(); }} className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">{fav ? "❤️" : "🤍"}</button>
+        {p.condition === "new" && <span className="absolute bottom-1 left-1 bg-orange-500 text-white px-1.5 py-0.5 rounded font-bold" style={{ fontSize: "9px" }}>✨ Новое</span>}
       </div>
       <div className="p-2">
         <div className="font-black text-emerald-600">{fmtPrice(p.price)} TJS</div>
