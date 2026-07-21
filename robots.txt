@@ -1,0 +1,5 @@
+# robots.txt для IlmTech
+User-agent: *
+Allow: /
+
+Sitemap: https://ilm-tech.vercel.app/sitemap.xml

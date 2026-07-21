@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- ─── Иконки ─────────────────────────────────────────────── -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <!-- ─── SEO: как сайт выглядит в поиске Google ──────────────── -->
+    <title>IlmTech — маркетплейс Таджикистана: купи и продай Б/У</title>
+    <meta name="description" content="IlmTech — бесплатный маркетплейс Таджикистана. Продай ненужное и купи нужное: электроника, авто, недвижимость, одежда и ещё 13 категорий. Душанбе, Худжанд, Бохтар, Куляб, Хорог, Пенджикент." />
+    <meta name="keywords" content="IlmTech, маркетплейс Таджикистан, объявления Душанбе, купить бу Таджикистан, продать вещи, Somon аналог, доска объявлений" />
+    <meta name="author" content="IlmTech" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://ilm-tech.vercel.app/" />
+
+    <!-- ─── Open Graph: красивая карточка при отправке ссылки ───── -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="IlmTech" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:url" content="https://ilm-tech.vercel.app/" />
+    <meta property="og:title" content="IlmTech — маркетплейс Таджикистана" />
+    <meta property="og:description" content="Купи и продай Б/У вещи по всему Таджикистану. Бесплатно, без комиссий, со встроенным чатом." />
+    <meta property="og:image" content="https://ilm-tech.vercel.app/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+
+    <!-- ─── Twitter / X ────────────────────────────────────────── -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="IlmTech — маркетплейс Таджикистана" />
+    <meta name="twitter:description" content="Купи и продай Б/У вещи по всему Таджикистану. Бесплатно, без комиссий." />
+    <meta name="twitter:image" content="https://ilm-tech.vercel.app/icon-512.png" />
+
+    <!-- ─── PWA ────────────────────────────────────────────────── -->
+    <meta name="theme-color" content="#10b981" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="IlmTech" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- ─── Для Google: описание организации ───────────────────── -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "IlmTech",
+        "alternateName": "IlmTech TJ",
+        "url": "https://ilm-tech.vercel.app/",
+        "description": "Маркетплейс Таджикистана: купи и продай Б/У вещи бесплатно",
+        "inLanguage": "ru"
+      }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background-color: #0f172a;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js").catch(function () {});
+        });
+      }
+    </script>
+  </body>
+</html>
