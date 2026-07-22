@@ -89,6 +89,7 @@ interface Message {
   kind: "text" | "voice" | "sticker";
   text?: string;
   audio?: string;
+  dur?: number;   // длительность голосового в секундах
   ts: number;
   read: boolean;
 }
@@ -129,8 +130,20 @@ const CATEGORIES: { key: string; emoji: string }[] = [
 ];
 
 const CITIES = ["Душанбе", "Худжанд", "Бохтар", "Куляб", "Хорог", "Пенджикент"];
-const AVATARS = ["😎", "🦊", "🐯", "🦁", "🐼", "🦄", "🐲", "👨‍💻", "👩‍🎓", "🧑‍🚀", "🐰", "🐸", "🦉", "🐵", "🐱"];
-const STICKERS = ["👍", "❤️", "😂", "🔥", "🎉", "👏", "😍", "🤝", "✅", "🙏", "😎", "💯", "🥳", "😅", "🤔", "👌", "🫶", "😢", "😡", "🤩", "🥰", "😜", "🤗", "😴"];
+/* Аватары — взрослые и нейтральные, без «детских зверушек».
+   Люди, профессии, техника и символы. */
+const AVATARS = [
+  "😎", "🧔", "👨‍💼", "👩‍💼", "🧑‍💻", "👨‍🔧", "👩‍🎓", "🧑‍🚀",
+  "🕶️", "⚡", "🎯", "♠️", "🚀", "🏆", "💎", "🐺",
+  "🦅", "🐍", "🔱", "🎧", "🎮", "📷", "🏍️", "⚽",
+];
+
+/* Стикеры — обычные реакции, как в мессенджерах. */
+const STICKERS = [
+  "👍", "👎", "❤️", "🔥", "💯", "✅", "❌", "👌", "🤝",
+  "😂", "😅", "😐", "🤔", "😮", "😎", "🙄", "😤", "🥲",
+  "🙏", "👏", "🎉", "💪", "⚡", "🚀", "💰", "📌", "⏰",
+];
 
 /* ────────────────────────────────────────────────────────────────────────────
    СОЗДАТЕЛЬ САЙТА — особая СИНЯЯ галочка, которая есть ТОЛЬКО у этого аккаунта.
@@ -416,8 +429,10 @@ async function apiLoadMessages(): Promise<Message[]> {
     fromId: r.from_id as string,
     toId: r.to_id as string,
     kind: r.kind as Message["kind"],
-    text: (r.text as string) || undefined,
+    // у голосовых в поле text лежит длительность в секундах (чтобы не менять базу)
+    text: r.kind === "voice" ? undefined : ((r.text as string) || undefined),
     audio: (r.audio as string) || undefined,
+    dur: r.kind === "voice" ? (Number(r.text) || 0) : undefined,
     ts: Number(r.ts),
     read: !!r.read,
   }));
@@ -427,7 +442,9 @@ async function apiLoadMessages(): Promise<Message[]> {
 async function apiInsertMessage(m: Message): Promise<void> {
   await supabase.from("ilm_messages").insert({
     id: m.id, conversation_id: m.conversationId, from_id: m.fromId, to_id: m.toId,
-    kind: m.kind, text: m.text ?? null, audio: m.audio ?? null, ts: m.ts, read: m.read,
+    kind: m.kind,
+    text: m.kind === "voice" ? String(m.dur ?? 0) : (m.text ?? null),
+    audio: m.audio ?? null, ts: m.ts, read: m.read,
   });
 }
 
@@ -957,10 +974,11 @@ html.ilm-night input::placeholder, html.ilm-night textarea::placeholder { color:
    ──────────────────────────────────────────────────────────────────────────── */
 const STARS_CSS = `
 @keyframes ilmFloatUp {
-  0%   { transform: translateY(0) scale(1);      opacity: 0; }
-  10%  {                                          opacity: 1; }
-  90%  {                                          opacity: 1; }
-  100% { transform: translateY(-115vh) scale(1.3); opacity: 0; }
+  0%   { transform: translate(0, 0) scale(.7);                            opacity: 0; }
+  12%  {                                                                   opacity: 1; }
+  50%  { transform: translate(calc(var(--drift) * .5), -55vh) scale(1.15); }
+  88%  {                                                                   opacity: 1; }
+  100% { transform: translate(var(--drift), -115vh) scale(1.35);           opacity: 0; }
 }
 @keyframes ilmTwinkle {
   0%, 100% { opacity: 0.25; }
@@ -1016,19 +1034,51 @@ html.ilm-night .ilm-bubble-in { background:#1e2b3a !important; color:#e8eef5 !im
 html.ilm-night .ilm-date-chip { background: rgba(255,255,255,.10) !important; color:#cbd5e1 !important; }
 /* Шапка и поле ввода чата */
 html.ilm-night .ilm-chat-panel { background:#141f2e !important; border-color:#25384d !important; }
+
+/* ── КЛАССИЧЕСКАЯ ТЕМА: тёплая, бежевая, как бумага ── */
+html.ilm-classic body { background:#f6f1e7; }
+html.ilm-classic .ilm-app-root { background-image:none !important; background-color:#f6f1e7 !important; }
+html.ilm-classic .bg-white { background-color:#fffdf8 !important; }
+html.ilm-classic .bg-gray-50 { background-color:#f6f1e7 !important; }
+html.ilm-classic .bg-gray-100 { background-color:#efe7d8 !important; }
+html.ilm-classic .bg-gray-200 { background-color:#e4d9c5 !important; }
+html.ilm-classic .border-gray-200 { border-color:#e0d5c0 !important; }
+html.ilm-classic .border-gray-300 { border-color:#d5c8ad !important; }
+html.ilm-classic .border-emerald-100 { border-color:#dfd3ba !important; }
+html.ilm-classic .text-gray-900 { color:#3b3226 !important; }
+html.ilm-classic .text-gray-700 { color:#5a4d3c !important; }
+html.ilm-classic .text-gray-500 { color:#8a7c67 !important; }
+html.ilm-classic .text-gray-400 { color:#a1937d !important; }
+html.ilm-classic .ilm-chat-bg {
+  background-color:#f2ead9 !important;
+  background-image:
+    radial-gradient(circle at 18% 15%, rgba(180,140,80,.10), transparent 42%),
+    radial-gradient(rgba(150,120,70,.13) 1.5px, transparent 1.5px) !important;
+  background-size: auto, 24px 24px !important;
+}
+html.ilm-classic .ilm-bubble-in { background:#fffdf8 !important; color:#3b3226 !important; }
+html.ilm-classic .ilm-chat-panel { background:#fffdf8 !important; border-color:#e0d5c0 !important; }
+html.ilm-classic .ilm-date-chip { background:rgba(90,77,60,.12) !important; color:#6b5c47 !important; }
 `;
 
 /** Одна звёздочка со случайными параметрами (позиция, размер, скорость). */
-interface StarSpec { left: number; size: number; delay: number; duration: number; opacity: number; }
+/** Три оформления сайта: светлое, ночное и классическое (тёплое бежевое). */
+type Theme = "light" | "night" | "classic";
+
+interface StarSpec { left: number; size: number; delay: number; duration: number; opacity: number; color: string; drift: number; }
 
 /** Генерируем звёзды один раз — иначе они «прыгают» при каждой перерисовке. */
+const STAR_COLORS = ["#ffffff", "#6ee7b7", "#34d399", "#a7f3d0", "#7dd3fc", "#c4b5fd", "#fde68a", "#fca5a5"];
+
 const makeStars = (count: number): StarSpec[] =>
   Array.from({ length: count }, () => ({
     left: Math.random() * 100,
-    size: 1.5 + Math.random() * 2.5,
+    size: 1.5 + Math.random() * 3,
     delay: Math.random() * 12,
-    duration: 9 + Math.random() * 11,
-    opacity: 0.35 + Math.random() * 0.5,
+    duration: 9 + Math.random() * 12,
+    opacity: 0.4 + Math.random() * 0.55,
+    color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
+    drift: Math.round((Math.random() - 0.5) * 260),
   }));
 
 /** Фон из плывущих звёздочек. */
@@ -1045,10 +1095,12 @@ function StarField({ stars }: { stars: StarSpec[] }) {
             width: `${s.size}px`,
             height: `${s.size}px`,
             opacity: s.opacity,
+            background: s.color,
             animationDelay: `${s.delay}s`,
             animationDuration: `${s.duration}s`,
-            boxShadow: `0 0 ${s.size * 3}px rgba(255,255,255,.85)`,
-          }}
+            boxShadow: `0 0 ${s.size * 3.5}px ${s.color}`,
+            ["--drift" as string]: `${s.drift}px`,
+          } as React.CSSProperties}
         />
       ))}
     </div>
@@ -1112,7 +1164,10 @@ export default function App() {
   const [npImages, setNpImages] = useState<string[]>([]);
   const [npCond, setNpCond] = useState<"new" | "used">("used"); // по умолчанию Б/У
   const [condFilter, setCondFilter] = useState<"all" | "used" | "new">("all"); // фильтр на главной
-  const [theme, setTheme] = useState<"light" | "night">(() => (local.get<string>("ilm_theme", "light") === "night" ? "night" : "light"));
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = local.get<string>("ilm_theme", "light");
+    return saved === "night" || saved === "classic" ? saved : "light";
+  });
   const [splashOpen, setSplashOpen] = useState(true); // экран «Добро пожаловать» при заходе
   const starsRef = useRef<StarSpec[]>(makeStars(46));  // звёздочки фона (создаются один раз) ✨
 
@@ -1160,9 +1215,9 @@ export default function App() {
   }, []);
   useEffect(() => {
     document.documentElement.classList.toggle("ilm-night", theme === "night");
+    document.documentElement.classList.toggle("ilm-classic", theme === "classic");
     local.set("ilm_theme", theme);
   }, [theme]);
-  const toggleTheme = () => setTheme((p) => (p === "night" ? "light" : "night"));
 
   /* ---- чат ---- */
   const [chatPartnerId, setChatPartnerId] = useState<string | null>(null);
@@ -1710,34 +1765,87 @@ export default function App() {
 
   const sendText = () => { if (msgInput.trim()) { pushMessage({ kind: "text", text: msgInput.trim() }); setMsgInput(""); } };
   const sendSticker = (emoji: string) => pushMessage({ kind: "sticker", text: emoji });
-  const sendVoice = (b64: string) => {
-    if (b64.length > 400_000) { showToast("Голосовое слишком длинное (макс ~20 сек)", "err"); return; }
-    pushMessage({ kind: "voice", audio: b64 });
+  const sendVoice = (b64: string, dur: number) => {
+    if (b64.length > 700_000) { showToast("Голосовое слишком длинное (макс ~30 сек)", "err"); return; }
+    pushMessage({ kind: "voice", audio: b64, dur });
+  };
+
+  /* ── ЗАПИСЬ ГОЛОСОВЫХ ──
+     Раньше запись часто приходила пустой (0:00). Причины было три:
+       1) микрофон включается не мгновенно — если отпустить кнопку быстро,
+          стоп срабатывал раньше, чем запись успевала начаться;
+       2) mr.start() без интервала не собирал куски звука;
+       3) формат жёстко ставился audio/webm, хотя браузер мог писать в другом.
+     Теперь всё это учтено. */
+
+  const wantStopRef = useRef(false);   // отпустили кнопку раньше, чем включился микрофон
+  const recStartRef = useRef(0);       // когда началась запись (для длительности)
+
+  /** Формат, который реально поддерживает браузер. */
+  const pickMime = (): string => {
+    const list = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
+    for (const m of list) {
+      if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m)) return m;
+    }
+    return "";
   };
 
   const startRecording = async () => {
+    if (mediaRecRef.current) return;         // уже идёт запись
+    wantStopRef.current = false;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
+      const mime = pickMime();
+      const mr = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
       chunksRef.current = [];
-      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+
+      mr.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data); };
+
       mr.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        const reader = new FileReader();
-        reader.onloadend = () => sendVoice(reader.result as string);
-        reader.readAsDataURL(blob);
         stream.getTracks().forEach((t) => t.stop());
+        mediaRecRef.current = null;
+        setIsRecording(false);
+
+        const secs = Math.max(1, Math.round((Date.now() - recStartRef.current) / 1000));
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || "audio/webm" });
+
+        // слишком короткая или пустая запись — не отправляем
+        if (blob.size < 1200) { showToast("Слишком короткая запись — держи кнопку дольше 🎤", "err"); return; }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const data = reader.result as string;
+          if (!data || data.length < 200) { showToast("Запись не получилась, попробуй ещё раз", "err"); return; }
+          sendVoice(data, secs);
+        };
+        reader.readAsDataURL(blob);
       };
-      mr.start();
+
+      mr.start(200);                     // собираем звук кусками по 200мс
       mediaRecRef.current = mr;
+      recStartRef.current = Date.now();
       setIsRecording(true);
+
+      // кнопку отпустили, пока включался микрофон — останавливаем чуть позже,
+      // чтобы успел записаться хотя бы кусочек
+      if (wantStopRef.current) {
+        setTimeout(() => { if (mediaRecRef.current?.state === "recording") mediaRecRef.current.stop(); }, 500);
+      }
     } catch {
-      showToast("Нет доступа к микрофону 🎤", "err");
+      showToast("Нет доступа к микрофону 🎤 Разреши его в настройках браузера", "err");
+      setIsRecording(false);
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecRef.current && isRecording) { mediaRecRef.current.stop(); setIsRecording(false); }
+    wantStopRef.current = true;
+    const mr = mediaRecRef.current;
+    if (mr && mr.state === "recording") {
+      // минимум полсекунды записи, иначе браузер отдаёт пустоту
+      const passed = Date.now() - recStartRef.current;
+      if (passed < 500) setTimeout(() => { if (mediaRecRef.current?.state === "recording") mediaRecRef.current.stop(); }, 500 - passed);
+      else mr.stop();
+    }
   };
 
   /**
@@ -2426,7 +2534,27 @@ export default function App() {
                 <button onClick={() => showToast(`«${t.notifications}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">🔔</span><span>{t.notifications}</span><span className="ml-auto text-gray-400">›</span></button>
                 <button onClick={() => showToast(`«${t.verification}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">✅</span><span>{t.verification}</span><span className="ml-auto text-gray-400">›</span></button>
                 <button onClick={() => showToast(`«${t.security}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">🛡️</span><span>{t.security}</span><span className="ml-auto text-gray-400">›</span></button>
-                <button onClick={toggleTheme} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">{theme === "night" ? "🌙" : "☀️"}</span><span>Тёмная тема</span><span className={`ml-auto w-12 h-7 rounded-full p-1 transition ${theme === "night" ? "bg-emerald-500" : "bg-gray-300"}`}><span className={`block w-5 h-5 rounded-full bg-white transition-transform ${theme === "night" ? "translate-x-5" : ""}`} /></span></button>
+                <div className="w-full p-3 rounded-xl bg-white border border-gray-200">
+                  <div className="flex items-center gap-2 mb-2.5">
+                    <span className="text-xl">🎨</span>
+                    <span className="font-semibold">Оформление сайта</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {([
+                      { key: "light",   icon: "☀️", name: "Светлая" },
+                      { key: "night",   icon: "🌙", name: "Ночная" },
+                      { key: "classic", icon: "📜", name: "Классика" },
+                    ] as const).map((opt) => (
+                      <button key={opt.key} onClick={() => setTheme(opt.key)}
+                        className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition ${theme === opt.key
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 font-bold"
+                          : "border-gray-200 hover:border-emerald-300"}`}>
+                        <span className="text-2xl">{opt.icon}</span>
+                        <span className="text-xs">{opt.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <button onClick={() => setLangPickerOpen(true)} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">🌐</span><span>{t.language}</span><span className="ml-auto text-emerald-600 font-semibold">{LANG_NAMES[lang]}</span></button>
                 <button onClick={() => showToast(`«${t.help}» скоро будет доступно`, "info")} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white border border-gray-200 text-left"><span className="text-xl">❓</span><span>{t.help}</span><span className="ml-auto text-gray-400">›</span></button>
               </div>
@@ -2699,6 +2827,79 @@ function NavBtn({ icon, label, active, onClick, badge }: { icon: ReactNode; labe
   );
 }
 
+/** Голосовое сообщение — плеер в стиле Telegram (кнопка + волна + время). */
+function VoiceNote({ src, dur, mine }: { src: string; dur?: number; mine: boolean }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [pos, setPos] = useState(0); // 0..1 — сколько проиграно
+
+  const total = dur && dur > 0 ? dur : 0;
+
+  const toggle = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) { a.pause(); setPlaying(false); }
+    else { a.play().then(() => setPlaying(true)).catch(() => setPlaying(false)); }
+  };
+
+  // столбики «волны» — рисуем всегда одинаково для одного и того же сообщения
+  const bars = useMemo(() => {
+    const out: number[] = [];
+    let seed = src.length;
+    for (let i = 0; i < 26; i++) {
+      seed = (seed * 9301 + 49297) % 233280;
+      out.push(0.28 + (seed / 233280) * 0.72);
+    }
+    return out;
+  }, [src]);
+
+  const fmt = (sec: number) => {
+    const m = Math.floor(sec / 60), r = Math.floor(sec % 60);
+    return `${m}:${r < 10 ? "0" : ""}${r}`;
+  };
+
+  return (
+    <div className="flex items-center gap-2.5" style={{ minWidth: 190 }}>
+      <audio
+        ref={audioRef}
+        src={src}
+        preload="metadata"
+        onEnded={() => { setPlaying(false); setPos(0); }}
+        onTimeUpdate={(e) => {
+          const a = e.currentTarget;
+          const d = Number.isFinite(a.duration) && a.duration > 0 ? a.duration : total;
+          if (d > 0) setPos(Math.min(1, a.currentTime / d));
+        }}
+      />
+      <button onClick={toggle}
+        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition active:scale-90 ${mine ? "bg-white/25 text-white" : "bg-emerald-500 text-white"}`}>
+        {playing ? "❚❚" : "▶"}
+      </button>
+
+      <div className="flex-1 flex items-center gap-[2px] h-7">
+        {bars.map((h, i) => {
+          const done = i / bars.length <= pos;
+          return (
+            <span key={i}
+              className="rounded-full transition-colors"
+              style={{
+                width: 3,
+                height: `${Math.round(h * 24)}px`,
+                background: mine
+                  ? (done ? "#ffffff" : "rgba(255,255,255,.45)")
+                  : (done ? "#10b981" : "rgba(16,185,129,.35)"),
+              }} />
+          );
+        })}
+      </div>
+
+      <span className={`text-[11px] shrink-0 tabular-nums ${mine ? "text-white/80" : "text-gray-400"}`}>
+        {total > 0 ? fmt(total) : "🎤"}
+      </span>
+    </div>
+  );
+}
+
 /** Кнопка бокового меню — показывается только на большом экране (ноутбук). */
 function SideNavBtn({ icon, label, active, onClick, badge }: { icon: ReactNode; label: string; active: boolean; onClick: () => void; badge?: number; }) {
   return (
@@ -2864,7 +3065,7 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
                   : "ilm-bubble-in rounded-2xl rounded-bl-md"}`}
                 style={{ maxWidth: "78%" }}>
                 {m.kind === "voice"
-                  ? <audio controls src={m.audio} style={{ height: 36, maxWidth: 200 }} />
+                  ? <VoiceNote src={m.audio || ""} dur={m.dur} mine={mine} />
                   : <span className="text-sm">{m.text}</span>}
                 {/* время + галочки «доставлено / прочитано», как в Telegram */}
                 <div className={`flex items-center justify-end gap-1 mt-0.5 ${mine ? "text-white/75" : "text-gray-400"}`} style={{ fontSize: "10px" }}>
