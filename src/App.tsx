@@ -77,6 +77,7 @@ interface Product {
   badge: "VIP" | "Топ" | null;
   comments: Comment[];
   condition?: "new" | "used"; // Новое или Б/У (старые товары без поля считаем Б/У)
+  viewedBy?: string[];        // ID тех, кто уже смотрел — просмотр считается ОДИН раз с человека
   _emoji?: string;
 }
 
@@ -229,7 +230,7 @@ const T_RU = {
   follow: "➕ Подписаться", unfollow: "✓ Вы подписаны",
   adsLabel: "🏪 Объявления", followersShort: "Подписч.", followingShort: "Подписки", adsShort: "Объявл.",
   // чаты
-  messages: "💬 Сообщения", findById: "🔍 Найти по ID (ILM-XXXXX)", findBtn: "Найти",
+  messages: "💬 Сообщения", findById: "🔍 Найти друга по нику: @yud1x", findBtn: "Найти",
   yourIdHint: "Твой ID: ", giveItToFriend: " — дай его другу или брату, чтобы он написал тебе с другого ноутбука.",
   noDialogs: "Нет диалогов. Найди человека по ID или напиши продавцу из карточки.",
   noMessages: "Сообщений пока нет. Напишите первым 👇",
@@ -271,7 +272,7 @@ const T_TG: typeof T_RU = {
   switchAccount: "🔄 Аккаунт иваз кардан", logout: "🚪 Баромадан",
   follow: "➕ Обуна шудан", unfollow: "✓ Шумо обуна шудаед",
   adsLabel: "🏪 Эълонҳо", followersShort: "Обунач.", followingShort: "Обуна", adsShort: "Эълон.",
-  messages: "💬 Паёмҳо", findById: "🔍 Бо ID ёфтан (ILM-XXXXX)", findBtn: "Ёфтан",
+  messages: "💬 Паёмҳо", findById: "🔍 Дӯстро бо ном ёбед: @yud1x", findBtn: "Ёфтан",
   yourIdHint: "ID-и шумо: ", giveItToFriend: " — онро ба бародар ё дӯсти худ диҳед, то ӯ ба шумо нависад.",
   noDialogs: "Чате нест. Ҳамсӯҳбатро бо ID ёбед ё ба фурӯшанда нависед.",
   noMessages: "Ҳоло паём нест. Якум нависед 👇",
@@ -311,7 +312,7 @@ const T_EN: typeof T_RU = {
   switchAccount: "🔄 Switch account", logout: "🚪 Log out",
   follow: "➕ Follow", unfollow: "✓ Following",
   adsLabel: "🏪 Ads", followersShort: "Followers", followingShort: "Following", adsShort: "Ads",
-  messages: "💬 Messages", findById: "🔍 Find by ID (ILM-XXXXX)", findBtn: "Find",
+  messages: "💬 Messages", findById: "🔍 Find a friend by @username", findBtn: "Find",
   yourIdHint: "Your ID: ", giveItToFriend: " — give it to a friend so they can message you from another device.",
   noDialogs: "No chats yet. Find someone by ID or message a seller from a card.",
   noMessages: "No messages yet. Be the first 👇",
@@ -501,16 +502,15 @@ const makeUserId = (existing: User[]): string => {
 
 const convId = (a: string, b: string): string => [a, b].sort().join("__");
 
-/** Сделать уникальный ник из имени/почты (для входа через Google). */
-const makeUniqueNick = (base: string, existing: User[]): string => {
-  const clean = ((base || "user").split("@")[0].replace(/[^a-zA-Zа-яА-Я0-9_]/g, "").slice(0, 14)) || "user";
-  const taken = (n: string): boolean =>
-    isCreator(n) || existing.some((u) => (u.nickname || "").toLowerCase() === n.toLowerCase());
-  if (!taken(clean)) return clean;
-  for (let i = 1; i < 9999; i++) {
-    if (!taken(clean + i)) return clean + i;
-  }
-  return clean + Date.now().toString(36);
+/** Привести ник к «чистому» виду: только буквы/цифры/подчёркивание, без @. */
+const cleanNick = (raw: string): string =>
+  (raw || "").trim().replace(/^@+/, "").replace(/[^a-zA-Zа-яА-Я0-9_]/g, "").slice(0, 16);
+
+/** Свободен ли ник? (сравнение без учёта регистра, ники создателя зарезервированы) */
+const nickIsFree = (nick: string, existing: User[], exceptId?: string): boolean => {
+  const n = nick.toLowerCase();
+  if (isCreator(n) && !exceptId) return false;
+  return !existing.some((u) => u.id !== exceptId && (u.nickname || "").toLowerCase() === n);
 };
 
 const timeAgo = (ts: number): string => {
@@ -681,6 +681,7 @@ const BOT_TOPICS: BotTopic[] = [
   { keys: ["вернуть", "возврат", "обмен"], answer: "↩️ На IlmTech нет возвратов от сайта — это сделка между людьми. Если товар не подошёл, договаривайся с продавцом сам. Поэтому проверяй всё ДО оплаты!" },
 
   // ═══════════════════════ ЧАТ ═══════════════════════
+  { keys: ["просмотры", "счетчик просмотров", "сколько посмотрели", "views"], answer: "👁 Просмотры честные: один человек = один просмотр. Даже если открыть товар 1000 раз, засчитается 1. Свои собственные товары просмотры не накручивают." },
   { keys: ["написать", "сообщение", "чат", "переписка", "связаться", "мессенджер"], answer: "💬 На IlmTech есть встроенный чат! Возможности:\n• Текстовые сообщения\n• Голосовые 🎤\n• Стикеры 😀 (24 шт)\n• Удаление сообщений\n• Статус «в сети»\n• Доставка мгновенно через интернет\nНе нужны WhatsApp или Telegram!" },
   { keys: ["голосовое", "voice", "запись", "микрофон", "голосовое сообщение"], answer: "🎤 Чтобы записать голосовое: в чате, когда поле сообщения пустое, справа появится кнопка микрофона. Зажми её → говори → отпусти. Сообщение отправится." },
   { keys: ["стикер", "sticker", "эмодзи", "смайлик"], answer: "😀 В чате слева есть кнопка с улыбкой. Нажми её — откроется панель из 24 стикеров. Кликни любой — он сразу отправится собеседнику." },
@@ -689,9 +690,9 @@ const BOT_TOPICS: BotTopic[] = [
   { keys: ["читал", "прочитано", "галочки", "две галочки"], answer: "✓✓ Когда собеседник прочитает твоё сообщение, появятся две галочки. Одна галочка = доставлено, не прочитано." },
 
   // ═══════════════════════ ID и ПОИСК ЛЮДЕЙ ═══════════════════════
-  { keys: ["id", "айди", "найти человека", "идентификатор", "что за id", "ilm id"], answer: "🆔 У каждого пользователя свой уникальный ID вида ILM-XXXXX (например ILM-56SCN). Свой ID смотри в Профиле. Дай ID другу/брату — он сможет тебе написать с другого телефона." },
-  { keys: ["как найти друга", "найти по id", "найти знакомого", "написать другу"], answer: "🔍 Чтобы найти человека: открой «Чаты», вверху поле «Найти по ID (ILM-XXXXX)». Введи ID того человека, нажми «Найти» — откроется чат с ним." },
-  { keys: ["как меня найти", "мой id", "поделиться id"], answer: "📋 Открой Профиль — там твой ID (например ILM-ABC12) и кнопка «копир.». Скопируй и отправь другу — он сможет с тобой связаться." },
+  { keys: ["ник", "юзернейм", "username", "айди", "id", "как меня зовут"], answer: "🏷️ У каждого свой уникальный ник, как в Telegram: @yud1x. Двух одинаковых ников быть не может — ник занимает только один человек. Свой ник смотри в Профиле, там же кнопка «копир.»." },
+  { keys: ["как найти друга", "найти по нику", "найти знакомого", "написать другу", "найти человека"], answer: "🔍 Найти друга можно двумя способами:\n1) «Чаты» → вверху поле → введи его ник (@yud1x) → «Найти»\n2) «Профиль» → раздел «🔍 Найти друга»\nОткроется его профиль: подписчики, подписки и все объявления. Оттуда жми «Написать»." },
+  { keys: ["как меня найти", "мой ник", "поделиться ником"], answer: "📋 Открой Профиль — там твой ник (например @yud1x) и кнопка «копир.». Отправь его другу — он найдёт тебя через поиск и напишет." },
 
   // ═══════════════════════ В СЕТИ ═══════════════════════
   { keys: ["в сети", "онлайн", "офлайн", "статус", "зелёная точка", "не в сети"], answer: "🟢 Зелёная точка на аватаре = человек сейчас в сети (был активен меньше 2 минут назад).\n⚪ Без точки = офлайн. В чате видно когда человек был в последний раз («был 5 мин назад»)." },
@@ -734,7 +735,7 @@ const BOT_TOPICS: BotTopic[] = [
   { keys: ["пожаловаться", "жалоба", "репорт"], answer: "📢 Пока кнопки жалобы нет, но если встретил мошенника — напиши создателю IlmTech через профиль osimsadulloev8. Аккаунт заблокируем." },
 
   // ═══════════════════════ КОНТАКТЫ ═══════════════════════
-  { keys: ["связаться с создателем", "связаться с админом", "автор сайта", "хозяин сайта"], answer: "👨‍💻 Создатель IlmTech — школьник Осимсаддуло. Его ник на сайте: osimsadulloev8. Найди его через поиск по ID или напрямую через ник в комментариях." },
+  { keys: ["связаться с создателем", "связаться с админом", "автор сайта", "хозяин сайта"], answer: "👨‍💻 Создатель IlmTech — школьник Осимсаддуло. Его ники: @osimsadulloev8 и @yud1x (с синей галочкой 💙). Найди через «Чаты» → поиск по нику." },
   { keys: ["идея", "предложение", "функция", "что добавить"], answer: "💡 Есть идея для IlmTech? Напиши осими! Хорошие идеи попадут в следующее обновление. Главное чтобы было полезно всем пользователям." },
   { keys: ["баг", "ошибка", "глюк", "не работает", "сломалось"], answer: "🔧 Что-то не работает? Напиши создателю что именно и где. Чем подробнее — тем быстрее починим. Скриншот сильно поможет!" },
 
@@ -747,7 +748,7 @@ const BOT_TOPICS: BotTopic[] = [
   { keys: ["тёмная тема", "темная тема", "ночной режим", "ночная тема", "dark mode", "чёрная тема"], answer: "🌙 На IlmTech есть ночной режим! Открой Профиль → строка «Тёмная тема» → нажми переключатель. Сайт станет тёмным (глазам приятнее вечером). Выбор запоминается." },
   { keys: ["бу", "б/у", "бэу", "новое или бу", "подержанное", "секонд", "состояние товара"], answer: "♻️ IlmTech — площадка для вещей Б/У! При подаче объявления выбираешь: «♻️ Б/У» или «✨ Новое». А на главной есть переключатель «Все / Б/У / Новые» — фильтруй как хочешь. На новых товарах стоит метка ✨." },
   { keys: ["музыка", "звук", "мелодия", "бит", "выключить музыку", "включить музыку"], answer: "🎧 На сайте играет фоновый бит! Он включается после первого нажатия на экран. Выключить/включить: кнопка с динамиком в шапке сверху. Музыку рисует сам код — она ничья и легальная." },
-  { keys: ["войти через google", "гугл", "google", "continue with google", "вход через гугл"], answer: "🔴 На экране входа есть кнопка «Continue with Google» — выбираешь свой Google-аккаунт и заходишь без пароля. Если пишет ошибку — значит настройка Google ещё выполняется, попробуй позже или зарегистрируйся по почте." },
+  { keys: ["войти через google", "гугл", "google", "continue with google", "вход через гугл"], answer: "🔒 Входа через Google на IlmTech нет. Регистрация только по почте: жми «Регистрация», введи почту, ник и пароль — на почту придёт код подтверждения." },
   { keys: ["синяя галочка", "галочка создателя", "почему у него галочка", "создатель галочка"], answer: "💙 Синяя галочка — особый знак СОЗДАТЕЛЯ IlmTech. Она есть только у автора сайта. Её нельзя получить за подписчиков — только чёрную (1000+), зелёную (7000+) и жёлтую (10000+)." },
   { keys: ["скачать приложение", "google play", "плей маркет", "apk", "апк"], answer: "📱 Приложение IlmTech для Google Play уже готовится! А пока установи сайт как приложение: открой ilm-tech.vercel.app в Chrome → меню (⋮) → «Установить приложение». Работает так же!" },
   { keys: ["канал", "каналы", "истории", "сторис"], answer: "📢 Каналы и истории как в Telegram/Instagram — в планах! Следи за обновлениями. Пока можно подписываться на людей и смотреть их товары в профиле." },
@@ -936,6 +937,79 @@ html.ilm-night input, html.ilm-night textarea, html.ilm-night select { color:#f1
 html.ilm-night input::placeholder, html.ilm-night textarea::placeholder { color:#94a3b8 !important; }
 `;
 
+/* ────────────────────────────────────────────────────────────────────────────
+   АНИМАЦИЯ ЗВЁЗДОЧЕК — фон экрана приветствия. ✨
+   Звёзды медленно плывут вверх и мерцают. Элементов немного,
+   чтобы не тормозило на слабых телефонах.
+   ──────────────────────────────────────────────────────────────────────────── */
+const STARS_CSS = `
+@keyframes ilmFloatUp {
+  0%   { transform: translateY(0) scale(1);      opacity: 0; }
+  10%  {                                          opacity: 1; }
+  90%  {                                          opacity: 1; }
+  100% { transform: translateY(-115vh) scale(1.3); opacity: 0; }
+}
+@keyframes ilmTwinkle {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 1; }
+}
+@keyframes ilmFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ilm-star {
+  position: absolute;
+  border-radius: 9999px;
+  background: #fff;
+  will-change: transform, opacity;
+  animation-name: ilmFloatUp;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.ilm-twinkle {
+  position: absolute;
+  animation: ilmTwinkle 2.6s ease-in-out infinite;
+}
+.ilm-fade-up { animation: ilmFadeUp .55s ease-out both; }
+`;
+
+/** Одна звёздочка со случайными параметрами (позиция, размер, скорость). */
+interface StarSpec { left: number; size: number; delay: number; duration: number; opacity: number; }
+
+/** Генерируем звёзды один раз — иначе они «прыгают» при каждой перерисовке. */
+const makeStars = (count: number): StarSpec[] =>
+  Array.from({ length: count }, () => ({
+    left: Math.random() * 100,
+    size: 1.5 + Math.random() * 2.5,
+    delay: Math.random() * 12,
+    duration: 9 + Math.random() * 11,
+    opacity: 0.35 + Math.random() * 0.5,
+  }));
+
+/** Фон из плывущих звёздочек. */
+function StarField({ stars }: { stars: StarSpec[] }) {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {stars.map((s, i) => (
+        <span
+          key={i}
+          className="ilm-star"
+          style={{
+            left: `${s.left}%`,
+            bottom: "-10px",
+            width: `${s.size}px`,
+            height: `${s.size}px`,
+            opacity: s.opacity,
+            animationDelay: `${s.delay}s`,
+            animationDuration: `${s.duration}s`,
+            boxShadow: `0 0 ${s.size * 3}px rgba(255,255,255,.85)`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
    РАЗДЕЛ 8. ГЛАВНЫЙ КОМПОНЕНТ
    ════════════════════════════════════════════════════════════════════════════ */
@@ -995,6 +1069,7 @@ export default function App() {
   const [condFilter, setCondFilter] = useState<"all" | "used" | "new">("all"); // фильтр на главной
   const [theme, setTheme] = useState<"light" | "night">(() => (local.get<string>("ilm_theme", "light") === "night" ? "night" : "light"));
   const [splashOpen, setSplashOpen] = useState(true); // экран «Добро пожаловать» при заходе
+  const starsRef = useRef<StarSpec[]>(makeStars(46));  // звёздочки фона (создаются один раз) ✨
 
   /* ---- профиль ---- */
   const [editingNick, setEditingNick] = useState(false);
@@ -1032,9 +1107,9 @@ export default function App() {
 
   /* ---- тёмная тема (ночной режим) ---- */
   useEffect(() => {
-    // вставляем стили тёмной темы один раз
+    // вставляем стили тёмной темы и анимацию звёздочек один раз
     const el = document.createElement("style");
-    el.textContent = NIGHT_CSS;
+    el.textContent = NIGHT_CSS + STARS_CSS;
     document.head.appendChild(el);
     return () => { el.remove(); };
   }, []);
@@ -1081,44 +1156,8 @@ export default function App() {
 
         let usersList = u;
 
-        // ── Возврат после входа через Google? ──
-        const googlePending = sessionStorage.getItem("ilm_google_pending");
-        if (googlePending) {
-          sessionStorage.removeItem("ilm_google_pending");
-          try {
-            const { data } = await supabase.auth.getSession();
-            const gEmail = (data.session?.user?.email || "").trim();
-            const gName = ((data.session?.user?.user_metadata?.name as string) || gEmail.split("@")[0] || "user");
-            if (gEmail) {
-              let acc = usersList.find((x) => (x.email || "").toLowerCase() === gEmail.toLowerCase());
-              if (!acc) {
-                const nu: User = {
-                  id: makeUserId(usersList),
-                  email: gEmail,
-                  nickname: makeUniqueNick(gName, usersList),
-                  password: uid(),
-                  role: "seller",
-                  avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
-                  avatarIsPhoto: false,
-                  createdAt: Date.now(),
-                  lastSeen: Date.now(),
-                };
-                const res = await apiInsertUser(nu);
-                if (res.ok) { usersList = [...usersList, nu]; acc = nu; }
-              }
-              if (acc) {
-                setCurrentUser(acc);
-                session.set(acc.id);
-                const known = local.get<string[]>(LS.KNOWN, []);
-                if (!known.includes(acc.id)) local.set(LS.KNOWN, [...known, acc.id]);
-                setFavorites(local.get<string[]>(LS.FAVS + "_" + acc.id, []));
-                showToast(`Вошли как ${acc.nickname} ✅`, "ok");
-              }
-            }
-          } catch (ge) { console.error("google-return", ge); }
-          try { window.history.replaceState({}, "", window.location.pathname); } catch { /* ignore */ }
-        } else {
-          // ── обычное восстановление сессии ──
+        // ── восстановление сессии ──
+        {
           const sid = session.get();
           if (sid) {
             const found = usersList.find((x) => x.id === sid);
@@ -1291,7 +1330,8 @@ export default function App() {
   const startRegister = async () => {
     if (authBusy) return;
     if (!isEmail(authEmail)) { setAuthErr("Введите корректную почту, например name@mail.com"); return; }
-    if (authNick.trim().length < 2) { setAuthErr("Никнейм: минимум 2 символа"); return; }
+    const nick = cleanNick(authNick);
+    if (nick.length < 2) { setAuthErr("Ник: минимум 2 символа (буквы, цифры, _)"); return; }
     if (authPass.length < 4) { setAuthErr("Пароль: минимум 4 символа"); return; }
     if (authPass !== authPass2) { setAuthErr("Пароли не совпадают"); return; }
     setAuthErr("");
@@ -1302,12 +1342,14 @@ export default function App() {
       if (fresh.some((u) => (u.email || "").toLowerCase() === authEmail.trim().toLowerCase())) {
         setAuthErr("Этот email уже зарегистрирован! Войди вместо регистрации."); return;
       }
-      if (isCreator(authNick)) {
-        setAuthErr("Этот никнейм зарезервирован для создателя 👑"); return;
+      // Ник должен быть УНИКАЛЬНЫМ: один ник = один человек (как @username в Telegram)
+      if (isCreator(nick)) {
+        setAuthErr("Этот ник зарезервирован для создателя 👑"); return;
       }
-      if (fresh.some((u) => (u.nickname || "").toLowerCase() === authNick.trim().toLowerCase())) {
-        setAuthErr("Этот никнейм уже занят!"); return;
+      if (!nickIsFree(nick, fresh)) {
+        setAuthErr(`Ник @${nick} уже занят! Придумай другой.`); return;
       }
+      setAuthNick(nick); // сохраняем «чистый» ник (без @ и лишних символов)
       // Просим Supabase прислать код на почту
       const { error } = await supabase.auth.signInWithOtp({
         email: authEmail.trim(),
@@ -1342,13 +1384,14 @@ export default function App() {
 
       // Почта подтверждена — создаём аккаунт в нашей базе
       const fresh = await apiLoadUsers();
-      if (fresh.some((u) => (u.nickname || "").toLowerCase() === authNick.trim().toLowerCase())) {
-        setAuthErr("Никнейм только что заняли. Вернись и выбери другой."); return;
+      const finalNick = cleanNick(authNick);
+      if (!nickIsFree(finalNick, fresh)) {
+        setAuthErr("Ник только что заняли. Вернись и выбери другой."); return;
       }
       const nu: User = {
         id: makeUserId(fresh),
         email: authEmail.trim(),
-        nickname: authNick.trim(),
+        nickname: finalNick,
         password: authPass,
         role: "seller",
         avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
@@ -1395,26 +1438,7 @@ export default function App() {
     }
   };
 
-  /* ── Вход через Google ── */
-  const signInWithGoogle = async () => {
-    try {
-      sessionStorage.setItem("ilm_google_pending", "1");
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: window.location.origin },
-      });
-      if (error) {
-        sessionStorage.removeItem("ilm_google_pending");
-        showToast("Вход через Google пока не настроен", "err");
-        console.error("google", error);
-      }
-    } catch (e) {
-      sessionStorage.removeItem("ilm_google_pending");
-      showToast("Вход через Google пока не настроен", "err");
-      console.error("google", e);
-    }
-  };
-
+  /* ── Вход по нику и паролю ── */
   const doLogin = async () => {
     if (authBusy) return;
     setAuthBusy(true);
@@ -1558,6 +1582,7 @@ export default function App() {
       sellerAvatar: currentUser.avatar,
       sellerIsPhoto: currentUser.avatarIsPhoto,
       views: 0,
+      viewedBy: [],
       createdAt: Date.now(),
       badge: null,
       comments: [],
@@ -1571,8 +1596,23 @@ export default function App() {
     showToast("Объявление опубликовано! ⚡", "ok");
   };
 
+  /**
+   * Открыть карточку товара.
+   * Просмотр засчитывается ТОЛЬКО ОДИН РАЗ с каждого человека:
+   * если ты открыл товар 1000 раз — это всё равно 1 просмотр.
+   * Свои собственные товары просмотры не накручивают.
+   */
   const openCard = async (p: Product) => {
-    const updatedProduct = { ...p, views: p.views + 1 };
+    const me = currentUser?.id;
+    const seen = p.viewedBy ?? [];
+
+    // свой товар, не вошёл, или уже смотрел раньше → счётчик не трогаем
+    if (!me || p.sellerId === me || seen.includes(me)) {
+      setOpenProduct(p);
+      return;
+    }
+
+    const updatedProduct: Product = { ...p, viewedBy: [...seen, me], views: seen.length + 1 };
     setOpenProduct(updatedProduct);
     setProducts((prev) => prev.map((x) => x.id === p.id ? updatedProduct : x));
     apiUpdateProduct(updatedProduct);
@@ -1655,14 +1695,20 @@ export default function App() {
     if (mediaRecRef.current && isRecording) { mediaRecRef.current.stop(); setIsRecording(false); }
   };
 
-  const findUserById = () => {
-    const id = findId.trim().toUpperCase();
-    if (!id) return;
-    const found = users.find((u) => u.id.toUpperCase() === id);
-    if (!found) { showToast("Пользователь с таким ID не найден", "err"); return; }
-    if (found.id === currentUser?.id) { showToast("Это ваш собственный ID 🙂", "err"); return; }
+  /**
+   * Найти человека по нику (как в Telegram: @yud1x).
+   * Ник можно вводить с @ или без, регистр не важен.
+   */
+  const findUserByNick = () => {
+    const nick = cleanNick(findId).toLowerCase();
+    if (!nick) { showToast("Введи ник друга, например @yud1x", "info"); return; }
+
+    const found = users.find((u) => (u.nickname || "").toLowerCase() === nick);
+    if (!found) { showToast(`Пользователь @${nick} не найден`, "err"); return; }
+    if (found.id === currentUser?.id) { showToast("Это твой собственный ник 🙂", "info"); return; }
+
     setFindId("");
-    openChatWith(found.id);
+    setViewingProfileId(found.id); // открываем профиль: видно подписки и товары
   };
 
   /** Удалить всю переписку с собеседником */
@@ -1862,22 +1908,68 @@ export default function App() {
   ════════════════════════════════════════════════════════════════════════ */
   if (splashOpen) {
     return (
-      <div className="relative w-full h-screen flex flex-col items-center justify-center bg-gradient-to-br from-emerald-600 via-emerald-500 to-green-400 text-white overflow-hidden p-6">
-        <div className="pointer-events-none absolute -top-8 -left-8 opacity-10" style={{ fontSize: "170px" }}>⚡</div>
-        <div className="pointer-events-none absolute -bottom-10 -right-8 opacity-10" style={{ fontSize: "170px" }}>🛍️</div>
-        <div className="bg-white rounded-3xl px-9 py-5 shadow-2xl mb-6 text-center border-4 border-white/40">
-          <div className="text-emerald-600 font-black text-3xl leading-none">ilm</div>
-          <div className="text-emerald-600 font-black text-3xl leading-none tracking-wide">TECH</div>
+      <div className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden px-5 py-10"
+           style={{ background: "linear-gradient(160deg,#043d2f 0%,#065f46 38%,#059669 72%,#10b981 100%)" }}>
+
+        {/* ✨ плывущие звёздочки */}
+        <StarField stars={starsRef.current} />
+
+        {/* мягкие светящиеся пятна */}
+        <div className="pointer-events-none absolute -top-24 -left-24 w-80 h-80 rounded-full bg-emerald-300/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-green-300/20 blur-3xl" />
+
+        <div className="relative z-10 w-full max-w-lg flex flex-col items-center text-white">
+
+          {/* Логотип */}
+          <div className="ilm-fade-up bg-white rounded-3xl px-10 py-5 shadow-2xl mb-5 border-4 border-white/30"
+               style={{ animationDelay: ".05s" }}>
+            <div className="text-emerald-600 font-black text-4xl leading-none tracking-tight">IlmTech</div>
+          </div>
+
+          {/* Поздравление */}
+          <h1 className="ilm-fade-up text-3xl sm:text-4xl font-black text-center mb-2" style={{ animationDelay: ".15s" }}>
+            Поздравляю! 🎉
+          </h1>
+          <p className="ilm-fade-up text-white/90 text-center text-lg mb-6" style={{ animationDelay: ".22s" }}>
+            Ты зашёл в <b>IlmTech</b> ⚡
+          </p>
+
+          {/* Что такое IlmTech */}
+          <div className="ilm-fade-up w-full rounded-2xl bg-white/12 backdrop-blur-md border border-white/20 p-5 mb-4"
+               style={{ animationDelay: ".3s" }}>
+            <h2 className="font-bold text-lg mb-2">❓ Что такое IlmTech</h2>
+            <p className="text-white/85 text-sm leading-relaxed">
+              IlmTech — бесплатный маркетплейс Таджикистана. Здесь люди продают то,
+              что им больше не нужно, и покупают нужное — напрямую друг у друга,
+              без магазинов и посредников.
+            </p>
+          </div>
+
+          {/* Что тут есть */}
+          <div className="ilm-fade-up w-full rounded-2xl bg-white/12 backdrop-blur-md border border-white/20 p-5 mb-6"
+               style={{ animationDelay: ".38s" }}>
+            <h2 className="font-bold text-lg mb-3">✨ Что здесь есть</h2>
+            <ul className="space-y-2 text-sm text-white/85">
+              <li className="flex gap-2"><span>🛍️</span><span><b>17 категорий</b> — техника, авто, дом, одежда и другое</span></li>
+              <li className="flex gap-2"><span>💬</span><span><b>Чат</b> с голосовыми и стикерами — прямо на сайте</span></li>
+              <li className="flex gap-2"><span>👥</span><span><b>Профили и подписки</b> — следи за продавцами</span></li>
+              <li className="flex gap-2"><span>🤖</span><span><b>IlmBot</b> — помощник, ответит на любой вопрос</span></li>
+              <li className="flex gap-2"><span>🆓</span><span><b>Полностью бесплатно</b> — без комиссий и подписок</span></li>
+            </ul>
+          </div>
+
+          {/* Кнопка */}
+          <button
+            onClick={() => { musicStartedRef.current = true; if (musicOn) Music.start(); setSplashOpen(false); }}
+            className="ilm-fade-up px-14 py-4 rounded-2xl bg-white text-emerald-700 font-black text-lg shadow-2xl hover:scale-[1.03] active:scale-95 transition"
+            style={{ animationDelay: ".46s" }}
+          >
+            Начать ⚡
+          </button>
+          <p className="ilm-fade-up text-white/60 text-xs mt-4" style={{ animationDelay: ".54s" }}>
+            🎵 Со звуком веселее
+          </p>
         </div>
-        <h1 className="text-3xl font-black text-center mb-2">Добро пожаловать! 👋</h1>
-        <p className="text-white/90 text-center mb-8">Купи и продай Б/У по всему Таджикистану ⚡</p>
-        <button
-          onClick={() => { musicStartedRef.current = true; if (musicOn) Music.start(); setSplashOpen(false); }}
-          className="px-12 py-4 rounded-2xl bg-white text-emerald-600 font-black text-lg shadow-2xl active:scale-95 transition"
-        >
-          Начать ⚡
-        </button>
-        <p className="text-white/70 text-xs mt-4">🎵 Со звуком веселее</p>
       </div>
     );
   }
@@ -1903,7 +1995,6 @@ export default function App() {
             <div className="space-y-3">
               <button onClick={() => { setAuthView("login"); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">{t.login}</button>
               <button onClick={() => { setAuthView("register"); setAuthStep(1); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gray-100 border border-emerald-300 font-bold text-lg active:scale-95 transition">{t.register}</button>
-              <GoogleButton onClick={signInWithGoogle} />
               {knownAccounts.length > 0 && (
                 <button onClick={() => setAuthView("accounts")} className="w-full py-3 rounded-2xl bg-gray-100 border border-gray-300 font-bold text-sm active:scale-95 transition">🔄 {t.myAccounts} ({knownAccounts.length})</button>
               )}
@@ -1920,7 +2011,7 @@ export default function App() {
                   <AvatarView user={u} size={44} showOnline />
                   <div className="flex-1 min-w-0">
                     <div className="font-bold truncate">{u.nickname}</div>
-                    <div className="text-xs text-gray-500">🏪 IlmTech · {u.id}</div>
+                    <div className="text-xs text-gray-500">@{u.nickname}</div>
                   </div>
                   <span className="text-emerald-600 text-sm">Войти →</span>
                 </button>
@@ -1936,7 +2027,6 @@ export default function App() {
               <input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doLogin()} placeholder={t.password} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
               <button onClick={doLogin} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "..." : "Войти →"}</button>
-              <GoogleButton onClick={signInWithGoogle} />
               <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-gray-500 text-sm">{t.back}</button>
             </div>
           )}
@@ -1950,7 +2040,6 @@ export default function App() {
               <input type="password" value={authPass2} onChange={(e) => setAuthPass2(e.target.value)} placeholder={t.passwordRepeat} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
               <button onClick={startRegister} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "Отправляем код..." : "Получить код на почту →"}</button>
-              <GoogleButton onClick={signInWithGoogle} />
               <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-gray-500 text-sm">{t.back}</button>
             </div>
           )}
@@ -2013,25 +2102,28 @@ export default function App() {
 
       <main className="relative z-10 flex-1 min-h-0 overflow-hidden">
         {screen === "home" && (
-          <div className="h-full overflow-y-auto p-4 space-y-4">
-            <div className="rounded-3xl bg-gradient-to-r from-emerald-500 to-green-500 text-white p-6 shadow-xl relative overflow-hidden">
+          <div className="h-full overflow-y-auto p-4">
+           <div className="mx-auto w-full max-w-6xl space-y-4">
+            <div className="rounded-3xl bg-gradient-to-r from-emerald-500 to-green-500 text-white p-5 sm:p-6 shadow-xl relative overflow-hidden">
               <div className="absolute -right-4 -top-4 text-7xl opacity-20">⚡</div>
               <h2 className="text-2xl font-black leading-tight relative">{t.homeBanner1}</h2>
               <p className="text-gray-900/80 relative">{t.homeBanner2}</p>
             </div>
 
-            <div className="grid grid-cols-6 gap-2">
+            {/* Категории: компактные карточки фиксированной высоты.
+                Чем шире экран — тем больше колонок (чтобы кнопки не раздувались). */}
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2">
               {CATEGORIES.slice(0, 11).map((c) => (
                 <button key={c.key} onClick={() => setCategory(c.key)}
-                  className={`aspect-square flex flex-col items-center justify-center rounded-xl border font-medium transition active:scale-90 ${category === c.key ? "bg-gradient-to-br from-emerald-500 to-green-500 text-white border-emerald-400 shadow-md" : "bg-white border-gray-200"}`}>
-                  <span className={category === c.key ? "text-white" : "text-emerald-600"}><CategoryIcon name={c.key} size={24} /></span>
-                  <span className="leading-none mt-0.5 text-center px-0.5" style={{ fontSize: "9px" }}>{c.key}</span>
+                  className={`h-[74px] flex flex-col items-center justify-center gap-1 rounded-xl border font-medium transition hover:scale-[1.04] active:scale-95 ${category === c.key ? "bg-gradient-to-br from-emerald-500 to-green-500 text-white border-emerald-400 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"}`}>
+                  <span className={category === c.key ? "text-white" : "text-emerald-600"}><CategoryIcon name={c.key} size={22} /></span>
+                  <span className="leading-tight text-center px-1 truncate w-full" style={{ fontSize: "10px" }}>{c.key}</span>
                 </button>
               ))}
               <button onClick={() => setAllCatsOpen(true)}
-                className="aspect-square flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50 text-emerald-700 font-medium active:scale-90 transition">
-                <span className="text-lg">➕</span>
-                <span className="leading-none mt-0.5" style={{ fontSize: "9px" }}>{t.more}</span>
+                className="h-[74px] flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50 text-emerald-700 font-medium hover:scale-[1.04] active:scale-95 transition">
+                <span className="text-lg leading-none">➕</span>
+                <span className="leading-tight" style={{ fontSize: "10px" }}>{t.more}</span>
               </button>
             </div>
 
@@ -2051,11 +2143,12 @@ export default function App() {
               {homeProducts.length === 0 && <p className="col-span-full text-center text-gray-400 py-10">{t.noAds}</p>}
               {homeProducts.map((p) => <ProductCard key={p.id} p={p} fav={favorites.includes(p.id)} mine={p.sellerId === currentUser.id} onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} />)}
             </div>
+           </div>
           </div>
         )}
 
         {screen === "search" && (
-          <div className="h-full overflow-y-auto p-4 space-y-3">
+          <div className="h-full overflow-y-auto p-4"><div className="mx-auto w-full max-w-6xl space-y-3">
             <h2 className="text-xl font-bold">🔍 {t.search}</h2>
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.searchPlaceholder} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
             <div className="flex gap-2 overflow-x-auto pb-1">{CATEGORIES.map((c) => <button key={c.key} onClick={() => setSearchCat(c.key)} className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm border inline-flex items-center gap-1.5 ${searchCat === c.key ? "bg-emerald-500 border-emerald-400 text-white" : "bg-white border-gray-200 text-emerald-700"}`}><CategoryIcon name={c.key} size={15} />{c.key}</button>)}</div>
@@ -2065,7 +2158,7 @@ export default function App() {
             </div>
             <span className="text-gray-500 text-sm">{t.foundCount}: {searchResults.length}</span>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">{searchResults.map((p) => <ProductCard key={p.id} p={p} fav={favorites.includes(p.id)} mine={p.sellerId === currentUser.id} onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} />)}</div>
-          </div>
+          </div></div>
         )}
 
         {screen === "add" && (
@@ -2110,11 +2203,11 @@ export default function App() {
             <div className="w-full max-w-2xl space-y-3">
               <h2 className="text-xl font-bold">{t.messages}</h2>
               <div className="flex gap-2">
-                <input value={findId} onChange={(e) => setFindId(e.target.value)} placeholder={t.findById} onKeyDown={(e) => e.key === "Enter" && findUserById()} className="flex-1 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500 uppercase" />
-                <button onClick={findUserById} className="px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md">{t.findBtn}</button>
+                <input value={findId} onChange={(e) => setFindId(e.target.value)} placeholder={t.findById} onKeyDown={(e) => e.key === "Enter" && findUserByNick()} autoCapitalize="none" autoCorrect="off" spellCheck={false} className="flex-1 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
+                <button onClick={findUserByNick} className="px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md">{t.findBtn}</button>
               </div>
-              <p className="text-xs text-gray-400">Твой ID: <b className="text-emerald-600">{currentUser.id}</b> — дай его другу или брату, чтобы он написал тебе с другого ноутбука.</p>
-              {conversations.length === 0 ? <p className="text-gray-500 text-center py-10">Нет диалогов. Найди человека по ID или напиши продавцу из карточки.</p> : (
+              <p className="text-xs text-gray-400">Твой ник: <b className="text-emerald-600">@{currentUser.nickname}</b> — дай его другу, чтобы он тебя нашёл.</p>
+              {conversations.length === 0 ? <p className="text-gray-500 text-center py-10">Личных диалогов пока нет. Найди друга по нику (@ник) или напиши продавцу из карточки товара.</p> : (
                 <div className="space-y-2">
                   {conversations.map((c) => (
                     <button key={c.partner.id} onClick={() => openChatWith(c.partner.id)} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white border border-gray-200 active:scale-[0.98] transition text-left">
@@ -2179,7 +2272,7 @@ export default function App() {
                   </h2>
                 )}
                 <p className="text-gray-500 text-sm mt-1">{isCreator(currentUser.nickname) ? "👑 Создатель IlmTech" : "🏪 Пользователь IlmTech"}</p>
-                <div className="mt-2 inline-flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-xl"><span className="text-sm">ID: <b className="text-emerald-600">{currentUser.id}</b></span><button onClick={() => { navigator.clipboard?.writeText(currentUser.id); showToast("ID скопирован", "ok"); }} className="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded">копир.</button></div>
+                <div className="mt-2 inline-flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-xl"><span className="text-sm">Твой ник: <b className="text-emerald-600">@{currentUser.nickname}</b></span><button onClick={() => { navigator.clipboard?.writeText("@" + currentUser.nickname); showToast("Ник скопирован", "ok"); }} className="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded">копир.</button></div>
 
                 {/* Подписчики / подписки */}
                 <div className="mt-4 flex items-center justify-center gap-6">
@@ -2195,6 +2288,28 @@ export default function App() {
                 </div>
 
                 <div className="mt-4"><button onClick={() => { setEditingNick(!editingNick); setNewNick(currentUser.nickname); }} className="px-4 py-2 rounded-xl bg-gray-100 border border-gray-300 text-sm">{t.editProfile}</button></div>
+              </div>
+
+              {/* ─── Найти друга по нику ─── */}
+              <div className="rounded-2xl bg-white border border-gray-200 p-4 shadow-sm">
+                <h3 className="font-bold mb-1 flex items-center gap-2">🔍 Найти друга</h3>
+                <p className="text-xs text-gray-500 mb-3">
+                  Введи ник человека — увидишь его подписчиков, подписки и все объявления.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    value={findId}
+                    onChange={(e) => setFindId(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && findUserByNick()}
+                    placeholder="@yud1x"
+                    autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500"
+                  />
+                  <button onClick={findUserByNick}
+                    className="px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md active:scale-95 transition">
+                    {t.findBtn}
+                  </button>
+                </div>
               </div>
 
               <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4"><h3 className="font-bold mb-1">🤝 Как проходят сделки на IlmTech</h3><p className="text-sm text-gray-700">Без оплаты в приложении и без комиссий. Покупатель пишет продавцу 💬, договаривается, встречаетесь лично и платите наличными.</p></div>
@@ -2297,7 +2412,7 @@ export default function App() {
                   {target.nickname}
                   <VerifyMark followers={targetFollowers} nick={target.nickname} size={22} />
                 </h2>
-                <p className="text-gray-500 text-sm mt-1">🏪 IlmTech · {target.id}</p>
+                <p className="text-emerald-600 text-sm mt-1 font-semibold">@{target.nickname}</p>
                 <p className="text-xs mt-1">
                   {isOnline(target.lastSeen) ? <span className="text-emerald-600 font-semibold">🟢 в сети</span> : <span className="text-gray-400">{lastSeenText(target.lastSeen)}</span>}
                 </p>
@@ -2388,7 +2503,7 @@ export default function App() {
                           {u.nickname}
                           <VerifyMark followers={followersCount(u.id)} nick={u.nickname} size={12} />
                         </div>
-                        <div className="text-xs text-gray-400">🏪 IlmTech · {u.id}</div>
+                        <div className="text-xs text-gray-400">@{u.nickname}</div>
                       </div>
                       <span className="text-emerald-600 text-sm">›</span>
                     </button>
@@ -2450,27 +2565,6 @@ function AvatarView({ user, size, showOnline }: { user: { avatar: string; avatar
         />
       )}
     </span>
-  );
-}
-
-function GoogleButton({ onClick }: { onClick: () => void }) {
-  return (
-    <>
-      <div className="flex items-center gap-2 my-1">
-        <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-xs text-gray-400">или</span>
-        <div className="flex-1 h-px bg-gray-200" />
-      </div>
-      <button onClick={onClick} className="w-full py-3 rounded-2xl bg-white border border-gray-300 font-bold text-gray-700 flex items-center justify-center gap-2 active:scale-95 transition shadow-sm">
-        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-        </svg>
-        Continue with Google
-      </button>
-    </>
   );
 }
 
@@ -2600,12 +2694,12 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
         <button onClick={onOpenProfile} className="flex-1 min-w-0 text-left active:opacity-70 transition">
           <div className="font-bold truncate inline-flex items-center gap-1">{partner.nickname} <VerifyMark followers={partnerFollowers} nick={partner.nickname} size={14} /></div>
           <div className="text-xs text-gray-400">
-            {isOnline(partner.lastSeen) ? <span className="text-emerald-600 font-semibold">🟢 в сети</span> : lastSeenText(partner.lastSeen)} · {partner.id}
+            {isOnline(partner.lastSeen) ? <span className="text-emerald-600 font-semibold">в сети</span> : lastSeenText(partner.lastSeen)}
           </div>
         </button>
         <button onClick={onDelete} className="text-xl active:scale-90 transition" title="Удалить переписку">🗑️</button>
       </div>
-      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-1.5 bg-[#eef2f0]">
         {thread.length === 0 && <p className="text-gray-400 text-center py-10 text-sm">Сообщений пока нет. Напишите первым 👇</p>}
         {thread.map((m) => {
           const mine = m.fromId === myId;
@@ -2623,11 +2717,22 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
             );
           }
           return (
-            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"} group items-center gap-2`}>
+            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"} group items-end gap-2`}>
               {mine && <button onClick={() => onDeleteMessage(m.id)} className="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500 text-sm shrink-0" title="Удалить">✕</button>}
-              <div onContextMenu={handleLongPress} className={`px-3 py-2 rounded-2xl ${mine ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white" : "bg-gray-100 text-gray-900"}`} style={{ maxWidth: "75%" }}>
-                {m.kind === "voice" ? <audio controls src={m.audio} style={{ height: 36, maxWidth: 200 }} /> : <span className="text-sm">{m.text}</span>}
-                <div className="text-right mt-0.5" style={{ fontSize: "10px", color: "rgba(255,255,255,0.85)" }}>{fmtTime(m.ts)}</div>
+              {!mine && <div className="shrink-0"><AvatarView user={partner} size={28} /></div>}
+              <div onContextMenu={handleLongPress}
+                className={`px-3 py-1.5 shadow-sm break-words whitespace-pre-wrap ${mine
+                  ? "bg-gradient-to-br from-emerald-500 to-green-500 text-white rounded-2xl rounded-br-md"
+                  : "bg-white text-gray-900 rounded-2xl rounded-bl-md"}`}
+                style={{ maxWidth: "78%" }}>
+                {m.kind === "voice"
+                  ? <audio controls src={m.audio} style={{ height: 36, maxWidth: 200 }} />
+                  : <span className="text-sm">{m.text}</span>}
+                {/* время + галочки «доставлено / прочитано», как в Telegram */}
+                <div className={`flex items-center justify-end gap-1 mt-0.5 ${mine ? "text-white/75" : "text-gray-400"}`} style={{ fontSize: "10px" }}>
+                  <span>{fmtTime(m.ts)}</span>
+                  {mine && <span title={m.read ? "Прочитано" : "Доставлено"}>{m.read ? "✓✓" : "✓"}</span>}
+                </div>
               </div>
             </div>
           );
@@ -2639,13 +2744,13 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
           {STICKERS.map((s) => <button key={s} onClick={() => { onSticker(s); setStickersOpen(false); }} className="text-2xl p-1 rounded-lg active:scale-90 hover:bg-gray-100">{s}</button>)}
         </div>
       )}
-      <div className="flex items-center gap-2 p-3 border-t border-gray-200 bg-white shrink-0">
-        <button onClick={() => setStickersOpen(!stickersOpen)} className="text-2xl">😀</button>
-        <input value={msgInput} onChange={(e) => setMsgInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onSend()} onFocus={() => setStickersOpen(false)} placeholder="Сообщение..." className="flex-1 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none" />
+      <div className="flex items-center gap-2 p-2 border-t border-gray-200 bg-white shrink-0">
+        <button onClick={() => setStickersOpen(!stickersOpen)} className="text-2xl w-10 h-10 rounded-full hover:bg-gray-100 transition shrink-0">😀</button>
+        <input value={msgInput} onChange={(e) => setMsgInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onSend()} onFocus={() => setStickersOpen(false)} placeholder="Сообщение..." className="flex-1 px-4 py-2.5 rounded-full bg-gray-100 border border-gray-200 outline-none focus:border-emerald-400" />
         {msgInput.trim() ? (
-          <button onClick={onSend} className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 font-bold text-lg flex items-center justify-center shadow-md">➤</button>
+          <button onClick={onSend} className="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 text-white font-bold text-lg flex items-center justify-center shadow-md shrink-0 active:scale-90 transition">➤</button>
         ) : (
-          <button onMouseDown={startRecording} onMouseUp={stopRecording} onMouseLeave={() => isRecording && stopRecording()} onTouchStart={(e) => { e.preventDefault(); startRecording(); }} onTouchEnd={(e) => { e.preventDefault(); stopRecording(); }} className={`w-12 h-12 rounded-full flex items-center justify-center text-lg ${isRecording ? "bg-red-600 animate-pulse" : "bg-gray-200"}`}>🎤</button>
+          <button onMouseDown={startRecording} onMouseUp={stopRecording} onMouseLeave={() => isRecording && stopRecording()} onTouchStart={(e) => { e.preventDefault(); startRecording(); }} onTouchEnd={(e) => { e.preventDefault(); stopRecording(); }} className={`w-11 h-11 rounded-full flex items-center justify-center text-lg shrink-0 transition ${isRecording ? "bg-red-600 animate-pulse scale-110" : "bg-gray-200 hover:bg-gray-300"}`}>🎤</button>
         )}
       </div>
       {isRecording && <div className="text-center text-xs text-red-600 pb-2 shrink-0">● Идёт запись... отпустите кнопку</div>}
