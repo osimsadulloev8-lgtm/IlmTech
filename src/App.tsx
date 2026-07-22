@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, Fragment, type ReactNode } from "react";
 import { createClient, RealtimeChannel } from "@supabase/supabase-js";
 
 /* ══════════════════════════════════════════════════════════════════════════════════════
@@ -513,6 +513,19 @@ const nickIsFree = (nick: string, existing: User[], exceptId?: string): boolean 
   return !existing.some((u) => u.id !== exceptId && (u.nickname || "").toLowerCase() === n);
 };
 
+/** Подпись-разделитель даты в чате: «Сегодня», «Вчера» или «5 мая». */
+const dateChip = (ts: number): string => {
+  const d = new Date(ts);
+  const today = new Date();
+  const yest = new Date(); yest.setDate(today.getDate() - 1);
+  const same = (a: Date, b: Date) =>
+    a.getDate() === b.getDate() && a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
+  if (same(d, today)) return "Сегодня";
+  if (same(d, yest)) return "Вчера";
+  const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+  return `${d.getDate()} ${months[d.getMonth()]}`;
+};
+
 const timeAgo = (ts: number): string => {
   const minutes = Math.floor((Date.now() - ts) / 60000);
   if (minutes < 1) return "только что";
@@ -971,6 +984,38 @@ const STARS_CSS = `
   animation: ilmTwinkle 2.6s ease-in-out infinite;
 }
 .ilm-fade-up { animation: ilmFadeUp .55s ease-out both; }
+
+/* ── ЧАТ В СТИЛЕ TELEGRAM ── */
+/* Обои переписки — светлая тема */
+.ilm-chat-bg {
+  background-color: #e9efe9;
+  background-image:
+    radial-gradient(circle at 18% 15%, rgba(16,185,129,.13), transparent 42%),
+    radial-gradient(circle at 82% 78%, rgba(34,197,94,.13), transparent 42%),
+    radial-gradient(rgba(16,185,129,.10) 1.5px, transparent 1.5px);
+  background-size: auto, auto, 24px 24px;
+}
+/* Обои переписки — тёмная тема (как ночной Telegram) */
+html.ilm-night .ilm-chat-bg {
+  background-color: #0b1622 !important;
+  background-image:
+    radial-gradient(circle at 18% 15%, rgba(16,185,129,.16), transparent 42%),
+    radial-gradient(circle at 82% 78%, rgba(34,197,94,.13), transparent 42%),
+    radial-gradient(rgba(148,163,184,.10) 1.5px, transparent 1.5px) !important;
+  background-size: auto, auto, 24px 24px !important;
+}
+/* Пузырёк собеседника */
+.ilm-bubble-in { background:#fff; color:#111827; }
+html.ilm-night .ilm-bubble-in { background:#1e2b3a !important; color:#e8eef5 !important; }
+/* Разделитель даты («Сегодня», «Вчера») */
+.ilm-date-chip {
+  background: rgba(15,23,42,.10);
+  color: #475569;
+  backdrop-filter: blur(4px);
+}
+html.ilm-night .ilm-date-chip { background: rgba(255,255,255,.10) !important; color:#cbd5e1 !important; }
+/* Шапка и поле ввода чата */
+html.ilm-night .ilm-chat-panel { background:#141f2e !important; border-color:#25384d !important; }
 `;
 
 /** Одна звёздочка со случайными параметрами (позиция, размер, скорость). */
@@ -2298,8 +2343,8 @@ export default function App() {
                 </div>
               ) : (
                 /* пусто — только на большом экране */
-                <div className="w-full h-full flex flex-col items-center justify-center text-center px-6" style={{ backgroundColor: "#e8f0ea", backgroundImage: "radial-gradient(rgba(16,185,129,.09) 1px, transparent 1px)", backgroundSize: "22px 22px" }}>
-                  <div className="text-6xl mb-3">💬</div>
+                <div className="ilm-chat-bg w-full h-full flex flex-col items-center justify-center text-center px-6">
+                  <div className="w-20 h-20 rounded-full bg-emerald-500/15 flex items-center justify-center text-4xl mb-4">💬</div>
                   <p className="font-bold text-gray-700 text-lg">Выбери диалог слева</p>
                   <p className="text-gray-500 text-sm mt-1">или найди друга по нику, например @yud1x</p>
                 </div>
@@ -2767,7 +2812,7 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
   const [stickersOpen, setStickersOpen] = useState(false);
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 shrink-0">
+      <div className="ilm-chat-panel flex items-center gap-3 px-4 py-2.5 bg-white border-b border-gray-200 shrink-0">
         <button onClick={onBack} className="text-xl lg:hidden px-1 active:scale-90 transition">←</button>
         <button onClick={onOpenProfile} className="active:scale-90 transition"><AvatarView user={partner} size={40} showOnline /></button>
         <button onClick={onOpenProfile} className="flex-1 min-w-0 text-left active:opacity-70 transition">
@@ -2778,18 +2823,18 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
         </button>
         <button onClick={onDelete} className="text-xl active:scale-90 transition" title="Удалить переписку">🗑️</button>
       </div>
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-1.5"
-        style={{
-          backgroundColor: "#e8f0ea",
-          backgroundImage:
-            "radial-gradient(circle at 20% 20%, rgba(16,185,129,.10), transparent 45%)," +
-            "radial-gradient(circle at 80% 70%, rgba(34,197,94,.10), transparent 45%)," +
-            "radial-gradient(rgba(16,185,129,.09) 1px, transparent 1px)",
-          backgroundSize: "auto, auto, 22px 22px",
-        }}>
+      <div className="ilm-chat-bg flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-1.5">
         {thread.length === 0 && <p className="text-gray-400 text-center py-10 text-sm">Сообщений пока нет. Напишите первым 👇</p>}
-        {thread.map((m) => {
+        {thread.map((m, idx) => {
           const mine = m.fromId === myId;
+          // разделитель даты — если это первое сообщение дня
+          const prev = idx > 0 ? thread[idx - 1] : null;
+          const showDate = !prev || new Date(prev.ts).toDateString() !== new Date(m.ts).toDateString();
+          const dateSep = showDate ? (
+            <div key={`d-${m.id}`} className="flex justify-center py-2">
+              <span className="ilm-date-chip text-xs font-semibold px-3 py-1 rounded-full">{dateChip(m.ts)}</span>
+            </div>
+          ) : null;
           // долгое нажатие или контекстное меню = предложить удалить (только своё сообщение)
           const handleLongPress = (e: React.MouseEvent | React.TouchEvent) => {
             e.preventDefault();
@@ -2797,20 +2842,26 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
           };
           if (m.kind === "sticker") {
             return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"} group relative items-center gap-2`}>
-                {mine && <button onClick={() => onDeleteMessage(m.id)} className="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500 text-sm" title="Удалить">✕</button>}
-                <div onContextMenu={handleLongPress} className="text-5xl select-none">{m.text}</div>
-              </div>
+              <Fragment key={m.id}>
+                {dateSep}
+                <div className={`flex ${mine ? "justify-end" : "justify-start"} group relative items-end gap-2`}>
+                  {mine && <button onClick={() => onDeleteMessage(m.id)} className="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500 text-sm" title="Удалить">✕</button>}
+                  {!mine && <div className="shrink-0"><AvatarView user={partner} size={28} /></div>}
+                  <div onContextMenu={handleLongPress} className="text-6xl select-none leading-none py-1">{m.text}</div>
+                </div>
+              </Fragment>
             );
           }
           return (
-            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"} group items-end gap-2`}>
+            <Fragment key={m.id}>
+            {dateSep}
+            <div className={`flex ${mine ? "justify-end" : "justify-start"} group items-end gap-2`}>
               {mine && <button onClick={() => onDeleteMessage(m.id)} className="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500 text-sm shrink-0" title="Удалить">✕</button>}
               {!mine && <div className="shrink-0"><AvatarView user={partner} size={28} /></div>}
               <div onContextMenu={handleLongPress}
                 className={`px-3 py-1.5 shadow-sm break-words whitespace-pre-wrap ${mine
                   ? "bg-gradient-to-br from-emerald-500 to-green-500 text-white rounded-2xl rounded-br-md"
-                  : "bg-white text-gray-900 rounded-2xl rounded-bl-md"}`}
+                  : "ilm-bubble-in rounded-2xl rounded-bl-md"}`}
                 style={{ maxWidth: "78%" }}>
                 {m.kind === "voice"
                   ? <audio controls src={m.audio} style={{ height: 36, maxWidth: 200 }} />
@@ -2818,20 +2869,26 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
                 {/* время + галочки «доставлено / прочитано», как в Telegram */}
                 <div className={`flex items-center justify-end gap-1 mt-0.5 ${mine ? "text-white/75" : "text-gray-400"}`} style={{ fontSize: "10px" }}>
                   <span>{fmtTime(m.ts)}</span>
-                  {mine && <span title={m.read ? "Прочитано" : "Доставлено"}>{m.read ? "✓✓" : "✓"}</span>}
+                  {mine && (
+                    <span title={m.read ? "Прочитано" : "Доставлено"}
+                          className={m.read ? "text-sky-200 font-bold" : ""}>
+                      {m.read ? "✓✓" : "✓"}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
+            </Fragment>
           );
         })}
         <div ref={chatEndRef} />
       </div>
       {stickersOpen && (
-        <div className="grid grid-cols-8 gap-1 p-2 bg-white border-t border-gray-200 shrink-0" style={{ maxHeight: 140, overflowY: "auto" }}>
-          {STICKERS.map((s) => <button key={s} onClick={() => { onSticker(s); setStickersOpen(false); }} className="text-2xl p-1 rounded-lg active:scale-90 hover:bg-gray-100">{s}</button>)}
+        <div className="ilm-chat-panel grid grid-cols-7 sm:grid-cols-9 gap-1 p-3 bg-white border-t border-gray-200 shrink-0" style={{ maxHeight: 190, overflowY: "auto" }}>
+          {STICKERS.map((s) => <button key={s} onClick={() => { onSticker(s); setStickersOpen(false); }} className="text-3xl p-1.5 rounded-xl active:scale-90 hover:bg-emerald-50 hover:scale-110 transition">{s}</button>)}
         </div>
       )}
-      <div className="flex items-center gap-2 p-2 border-t border-gray-200 bg-white shrink-0">
+      <div className="ilm-chat-panel flex items-center gap-2 p-2 border-t border-gray-200 bg-white shrink-0">
         <button onClick={() => setStickersOpen(!stickersOpen)} className="text-2xl w-10 h-10 rounded-full hover:bg-gray-100 transition shrink-0">😀</button>
         <input value={msgInput} onChange={(e) => setMsgInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onSend()} onFocus={() => setStickersOpen(false)} placeholder="Сообщение..." className="flex-1 px-4 py-2.5 rounded-full bg-gray-100 border border-gray-200 outline-none focus:border-emerald-400" />
         {msgInput.trim() ? (
