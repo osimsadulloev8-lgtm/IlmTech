@@ -2088,15 +2088,6 @@ export default function App() {
           <span className="font-black text-lg bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">IlmTech</span>
         </div>
 
-        {/* Меню сверху — показывается только на большом экране (ноутбук) */}
-        <nav className="hidden lg:flex items-center gap-1 mx-auto">
-          <TopNavBtn icon={<NavIcon name="home" />}   label={t.home}   active={screen === "home"}      onClick={() => setScreen("home")} />
-          <TopNavBtn icon={<NavIcon name="search" />} label={t.search} active={screen === "search"}    onClick={() => setScreen("search")} />
-          {isSeller && <TopNavBtn icon={<NavIcon name="plus" />} label={t.sell} active={screen === "add"} onClick={() => setScreen("add")} />}
-          <TopNavBtn icon={<NavIcon name="chat" />}   label={t.chats}  active={screen === "messages"}  onClick={() => { setScreen("messages"); setChatPartnerId(null); }} badge={totalUnread} />
-          <TopNavBtn icon={<NavIcon name="heart" />}  label={t.favs}   active={screen === "favorites"} onClick={() => setScreen("favorites")} badge={favorites.length} />
-          <TopNavBtn icon={<NavIcon name="user" />}   label={t.profile} active={screen === "profile"}  onClick={() => setScreen("profile")} />
-        </nav>
         <div className="flex items-center gap-2">
           <button onClick={toggleMusic} title={musicOn ? "Выключить музыку" : "Включить музыку"} className={`w-9 h-9 rounded-xl border flex items-center justify-center active:scale-90 transition ${musicOn ? "bg-emerald-50 border-emerald-200 text-emerald-600" : "bg-gray-100 border-gray-200 text-gray-400"}`}>
             {musicOn ? (
@@ -2110,10 +2101,33 @@ export default function App() {
         </div>
       </header>
 
-      <main className="relative z-10 flex-1 min-h-0 overflow-hidden">
+      {/* Тело: слева боковое меню (только ноутбук), справа контент */}
+      <div className="relative z-10 flex-1 min-h-0 flex overflow-hidden">
+
+        {/* ─── БОКОВОЕ МЕНЮ (только на большом экране) ─── */}
+        <aside className="hidden lg:flex flex-col w-[210px] xl:w-[240px] shrink-0 border-r border-emerald-100 bg-white/70 backdrop-blur-xl py-4 px-3 gap-1">
+          <SideNavBtn icon={<NavIcon name="home" />}   label={t.home}    active={screen === "home"}      onClick={() => setScreen("home")} />
+          <SideNavBtn icon={<NavIcon name="search" />} label={t.search}  active={screen === "search"}    onClick={() => setScreen("search")} />
+          {isSeller && <SideNavBtn icon={<NavIcon name="plus" />} label={t.sell} active={screen === "add"} onClick={() => setScreen("add")} />}
+          <SideNavBtn icon={<NavIcon name="chat" />}   label={t.chats}   active={screen === "messages"}  onClick={() => { setScreen("messages"); setChatPartnerId(null); }} badge={totalUnread} />
+          <SideNavBtn icon={<NavIcon name="heart" />}  label={t.favs}    active={screen === "favorites"} onClick={() => setScreen("favorites")} badge={favorites.length} />
+          <SideNavBtn icon={<NavIcon name="user" />}   label={t.profile} active={screen === "profile"}   onClick={() => setScreen("profile")} />
+
+          <div className="mt-auto pt-4 border-t border-gray-200 text-center">
+            <p className="text-[11px] text-gray-400 leading-relaxed">
+              ⚡ IlmTech<br />маркетплейс Таджикистана
+            </p>
+          </div>
+        </aside>
+
+        <main className="flex-1 min-w-0 min-h-0 overflow-hidden">
         {screen === "home" && (
-          <div className="h-full overflow-y-auto p-4">
-           <div className="mx-auto w-full max-w-6xl space-y-4">
+          <div className="relative h-full overflow-y-auto p-4">
+           {/* ✨ лёгкие звёздочки на фоне главной */}
+           <div className="pointer-events-none fixed inset-0 opacity-[0.18]">
+             <StarField stars={starsRef.current} />
+           </div>
+           <div className="relative mx-auto w-full max-w-[1700px] space-y-4">
             <div className="rounded-3xl bg-gradient-to-r from-emerald-500 to-green-500 text-white p-5 sm:p-6 shadow-xl relative overflow-hidden">
               <div className="absolute -right-4 -top-4 text-7xl opacity-20">⚡</div>
               <h2 className="text-2xl font-black leading-tight relative">{t.homeBanner1}</h2>
@@ -2149,7 +2163,7 @@ export default function App() {
               <button onClick={() => setSortMode(sortMode === "new" ? "asc" : sortMode === "asc" ? "desc" : "new")} className="px-3 py-1.5 rounded-xl bg-gray-100 text-sm border border-gray-300">{sortMode === "new" ? t.sortNew : sortMode === "asc" ? t.sortAsc : t.sortDesc}</button>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
               {homeProducts.length === 0 && <p className="col-span-full text-center text-gray-400 py-10">{t.noAds}</p>}
               {homeProducts.map((p) => <ProductCard key={p.id} p={p} fav={favorites.includes(p.id)} mine={p.sellerId === currentUser.id} onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} />)}
             </div>
@@ -2158,7 +2172,7 @@ export default function App() {
         )}
 
         {screen === "search" && (
-          <div className="h-full overflow-y-auto p-4"><div className="mx-auto w-full max-w-6xl space-y-3">
+          <div className="h-full overflow-y-auto p-4"><div className="mx-auto w-full max-w-[1700px] space-y-3">
             <h2 className="text-xl font-bold">🔍 {t.search}</h2>
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.searchPlaceholder} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
             <div className="flex gap-2 overflow-x-auto pb-1">{CATEGORIES.map((c) => <button key={c.key} onClick={() => setSearchCat(c.key)} className={`whitespace-nowrap px-3 py-1.5 rounded-xl text-sm border inline-flex items-center gap-1.5 ${searchCat === c.key ? "bg-emerald-500 border-emerald-400 text-white" : "bg-white border-gray-200 text-emerald-700"}`}><CategoryIcon name={c.key} size={15} />{c.key}</button>)}</div>
@@ -2167,7 +2181,7 @@ export default function App() {
               <input value={priceTo} onChange={(e) => setPriceTo(e.target.value)} inputMode="numeric" placeholder={t.priceTo} className="w-1/2 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
             </div>
             <span className="text-gray-500 text-sm">{t.foundCount}: {searchResults.length}</span>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">{searchResults.map((p) => <ProductCard key={p.id} p={p} fav={favorites.includes(p.id)} mine={p.sellerId === currentUser.id} onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} />)}</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">{searchResults.map((p) => <ProductCard key={p.id} p={p} fav={favorites.includes(p.id)} mine={p.sellerId === currentUser.id} onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} />)}</div>
           </div></div>
         )}
 
@@ -2204,7 +2218,7 @@ export default function App() {
         {screen === "favorites" && (
           <div className="h-full overflow-y-auto p-4 space-y-3">
             <h2 className="text-xl font-bold">❤️ {t.favs}</h2>
-            {favProducts.length === 0 ? <p className="text-gray-500 text-center py-10">Пока пусто. Жми ❤️ на товарах.</p> : <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">{favProducts.map((p) => <ProductCard key={p.id} p={p} fav onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} mine={p.sellerId === currentUser.id} />)}</div>}
+            {favProducts.length === 0 ? <p className="text-gray-500 text-center py-10">Пока пусто. Жми ❤️ на товарах.</p> : <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">{favProducts.map((p) => <ProductCard key={p.id} p={p} fav onOpen={() => openCard(p)} onFav={() => toggleFav(p.id)} mine={p.sellerId === currentUser.id} />)}</div>}
           </div>
         )}
 
@@ -2284,7 +2298,7 @@ export default function App() {
                 </div>
               ) : (
                 /* пусто — только на большом экране */
-                <div className="w-full h-full flex flex-col items-center justify-center bg-[#eef2f0] text-center px-6">
+                <div className="w-full h-full flex flex-col items-center justify-center text-center px-6" style={{ backgroundColor: "#e8f0ea", backgroundImage: "radial-gradient(rgba(16,185,129,.09) 1px, transparent 1px)", backgroundSize: "22px 22px" }}>
                   <div className="text-6xl mb-3">💬</div>
                   <p className="font-bold text-gray-700 text-lg">Выбери диалог слева</p>
                   <p className="text-gray-500 text-sm mt-1">или найди друга по нику, например @yud1x</p>
@@ -2296,7 +2310,7 @@ export default function App() {
 
         {screen === "profile" && (
           <div className="h-full overflow-y-auto p-4 flex justify-center">
-            <div className="w-full max-w-3xl space-y-4">
+            <div className="w-full max-w-4xl space-y-4">
               <div className="rounded-3xl bg-white border border-emerald-100 p-6 text-center shadow-lg">
                 <button onClick={() => setAvatarPicker(!avatarPicker)} className="inline-block active:scale-90 transition"><AvatarView user={currentUser} size={88} /></button>
                 {avatarPicker && (
@@ -2391,7 +2405,8 @@ export default function App() {
             <div className="flex gap-2 p-3 border-t border-gray-200"><input value={botInput} onChange={(e) => setBotInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendBot()} placeholder={t.askBot} className="flex-1 px-3 py-2 rounded-xl bg-gray-100 border border-gray-300 outline-none text-sm" /><button onClick={() => sendBot()} className="px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold">➤</button></div>
           </div>
         )}
-      </main>
+        </main>
+      </div>
 
       <nav className="relative z-10 shrink-0 flex lg:hidden items-center justify-around bg-white/90 backdrop-blur-xl border-t border-emerald-100 py-2">
         <span className="pointer-events-none absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 via-green-400 to-orange-500" />
@@ -2639,17 +2654,18 @@ function NavBtn({ icon, label, active, onClick, badge }: { icon: ReactNode; labe
   );
 }
 
-/** Кнопка верхнего меню — показывается только на большом экране (ноутбук). */
-function TopNavBtn({ icon, label, active, onClick, badge }: { icon: ReactNode; label: string; active: boolean; onClick: () => void; badge?: number; }) {
+/** Кнопка бокового меню — показывается только на большом экране (ноутбук). */
+function SideNavBtn({ icon, label, active, onClick, badge }: { icon: ReactNode; label: string; active: boolean; onClick: () => void; badge?: number; }) {
   return (
     <button onClick={onClick}
-      className={`relative flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition ${active
-        ? "bg-emerald-50 text-emerald-600"
-        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"}`}>
-      <span>{icon}</span>
-      <span>{label}</span>
+      className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-[15px] transition-all ${active
+        ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md shadow-emerald-500/25"
+        : "text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"}`}>
+      <span className="shrink-0">{icon}</span>
+      <span className="truncate">{label}</span>
       {badge !== undefined && badge > 0 && (
-        <span className="bg-red-500 text-white rounded-full px-1.5 py-0.5 font-bold" style={{ fontSize: "10px" }}>{badge}</span>
+        <span className={`ml-auto rounded-full px-2 py-0.5 font-bold shrink-0 ${active ? "bg-white/25 text-white" : "bg-red-500 text-white"}`}
+              style={{ fontSize: "11px" }}>{badge}</span>
       )}
     </button>
   );
@@ -2762,7 +2778,15 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
         </button>
         <button onClick={onDelete} className="text-xl active:scale-90 transition" title="Удалить переписку">🗑️</button>
       </div>
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-1.5 bg-[#eef2f0]">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-1.5"
+        style={{
+          backgroundColor: "#e8f0ea",
+          backgroundImage:
+            "radial-gradient(circle at 20% 20%, rgba(16,185,129,.10), transparent 45%)," +
+            "radial-gradient(circle at 80% 70%, rgba(34,197,94,.10), transparent 45%)," +
+            "radial-gradient(rgba(16,185,129,.09) 1px, transparent 1px)",
+          backgroundSize: "auto, auto, 22px 22px",
+        }}>
         {thread.length === 0 && <p className="text-gray-400 text-center py-10 text-sm">Сообщений пока нет. Напишите первым 👇</p>}
         {thread.map((m) => {
           const mine = m.fromId === myId;
