@@ -2083,10 +2083,20 @@ export default function App() {
       <div className="pointer-events-none absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-red-100 blur-3xl" />
 
       <header className="relative z-10 shrink-0 flex items-center justify-between px-4 py-3 bg-white/80 backdrop-blur-xl border-b border-emerald-100">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="text-2xl">⚡</span>
           <span className="font-black text-lg bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">IlmTech</span>
         </div>
+
+        {/* Меню сверху — показывается только на большом экране (ноутбук) */}
+        <nav className="hidden lg:flex items-center gap-1 mx-auto">
+          <TopNavBtn icon={<NavIcon name="home" />}   label={t.home}   active={screen === "home"}      onClick={() => setScreen("home")} />
+          <TopNavBtn icon={<NavIcon name="search" />} label={t.search} active={screen === "search"}    onClick={() => setScreen("search")} />
+          {isSeller && <TopNavBtn icon={<NavIcon name="plus" />} label={t.sell} active={screen === "add"} onClick={() => setScreen("add")} />}
+          <TopNavBtn icon={<NavIcon name="chat" />}   label={t.chats}  active={screen === "messages"}  onClick={() => { setScreen("messages"); setChatPartnerId(null); }} badge={totalUnread} />
+          <TopNavBtn icon={<NavIcon name="heart" />}  label={t.favs}   active={screen === "favorites"} onClick={() => setScreen("favorites")} badge={favorites.length} />
+          <TopNavBtn icon={<NavIcon name="user" />}   label={t.profile} active={screen === "profile"}  onClick={() => setScreen("profile")} />
+        </nav>
         <div className="flex items-center gap-2">
           <button onClick={toggleMusic} title={musicOn ? "Выключить музыку" : "Включить музыку"} className={`w-9 h-9 rounded-xl border flex items-center justify-center active:scale-90 transition ${musicOn ? "bg-emerald-50 border-emerald-200 text-emerald-600" : "bg-gray-100 border-gray-200 text-gray-400"}`}>
             {musicOn ? (
@@ -2163,7 +2173,7 @@ export default function App() {
 
         {screen === "add" && (
           <div className="h-full overflow-y-auto p-4 flex justify-center">
-            <div className="w-full max-w-xl space-y-3">
+            <div className="w-full max-w-2xl space-y-3">
               <h2 className="text-xl font-bold">{t.newAd}</h2>
               <div className="rounded-xl bg-orange-50 border border-orange-200 text-orange-800 text-sm px-3 py-2">{t.usedNote}</div>
               <div className="grid grid-cols-4 gap-2">
@@ -2198,58 +2208,95 @@ export default function App() {
           </div>
         )}
 
-        {screen === "messages" && !chatPartnerId && (
-          <div className="h-full overflow-y-auto p-4 flex justify-center">
-            <div className="w-full max-w-2xl space-y-3">
-              <h2 className="text-xl font-bold">{t.messages}</h2>
-              <div className="flex gap-2">
-                <input value={findId} onChange={(e) => setFindId(e.target.value)} placeholder={t.findById} onKeyDown={(e) => e.key === "Enter" && findUserByNick()} autoCapitalize="none" autoCorrect="off" spellCheck={false} className="flex-1 px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-                <button onClick={findUserByNick} className="px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md">{t.findBtn}</button>
+        {/* ═══ ЧАТЫ — как в Telegram Web ═══
+            Телефон: видно что-то одно (список ИЛИ переписку).
+            Ноутбук: две колонки сразу — слева диалоги, справа переписка. */}
+        {screen === "messages" && (
+          <div className="h-full flex bg-white">
+
+            {/* ── ЛЕВАЯ КОЛОНКА: список диалогов ── */}
+            <div className={`${chatPartnerId ? "hidden lg:flex" : "flex"} flex-col w-full lg:w-[340px] xl:w-[380px] shrink-0 lg:border-r border-gray-200 h-full`}>
+
+              <div className="p-4 pb-2 shrink-0 space-y-3">
+                <h2 className="text-xl font-bold">{t.messages}</h2>
+                <div className="flex gap-2">
+                  <input value={findId} onChange={(e) => setFindId(e.target.value)} placeholder={t.findById}
+                    onKeyDown={(e) => e.key === "Enter" && findUserByNick()}
+                    autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                    className="flex-1 min-w-0 px-4 py-2.5 rounded-full bg-gray-100 border border-gray-200 outline-none focus:border-emerald-500" />
+                  <button onClick={findUserByNick}
+                    className="px-4 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md shrink-0 active:scale-95 transition">{t.findBtn}</button>
+                </div>
+                <p className="text-xs text-gray-400">
+                  Твой ник: <b className="text-emerald-600">@{currentUser.nickname}</b> — дай его другу, чтобы он тебя нашёл.
+                </p>
               </div>
-              <p className="text-xs text-gray-400">Твой ник: <b className="text-emerald-600">@{currentUser.nickname}</b> — дай его другу, чтобы он тебя нашёл.</p>
-              {conversations.length === 0 ? <p className="text-gray-500 text-center py-10">Личных диалогов пока нет. Найди друга по нику (@ник) или напиши продавцу из карточки товара.</p> : (
-                <div className="space-y-2">
-                  {conversations.map((c) => (
-                    <button key={c.partner.id} onClick={() => openChatWith(c.partner.id)} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white border border-gray-200 active:scale-[0.98] transition text-left">
-                      <AvatarView user={c.partner} size={48} showOnline />
-                      <div className="flex-1 min-w-0"><div className="flex items-center justify-between"><span className="font-bold truncate inline-flex items-center gap-1">{c.partner.nickname} <VerifyMark followers={followersCount(c.partner.id)} nick={c.partner.nickname} size={12} /></span><span className="text-xs text-gray-400 shrink-0">{fmtTime(c.last.ts)}</span></div><p className="text-sm text-gray-500 truncate">{c.last.kind === "voice" ? "🎤 Голосовое" : c.last.kind === "sticker" ? `Стикер ${c.last.text}` : c.last.text}</p></div>
-                      {c.unread > 0 && <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 font-bold">{c.unread}</span>}
-                    </button>
-                  ))}
+
+              <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-4 space-y-1">
+                {conversations.length === 0 ? (
+                  <p className="text-gray-500 text-center py-10 px-4 text-sm">
+                    Диалогов пока нет. Найди друга по нику (@ник) или напиши продавцу из карточки товара.
+                  </p>
+                ) : conversations.map((c) => (
+                  <button key={c.partner.id} onClick={() => openChatWith(c.partner.id)}
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition ${chatPartnerId === c.partner.id ? "bg-emerald-50 border border-emerald-200" : "hover:bg-gray-50 border border-transparent"}`}>
+                    <AvatarView user={c.partner} size={48} showOnline />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold truncate inline-flex items-center gap-1">
+                          {c.partner.nickname}
+                          <VerifyMark followers={followersCount(c.partner.id)} nick={c.partner.nickname} size={12} />
+                        </span>
+                        <span className="text-xs text-gray-400 shrink-0">{fmtTime(c.last.ts)}</span>
+                      </div>
+                      <p className="text-sm text-gray-500 truncate">
+                        {c.last.kind === "voice" ? "🎤 Голосовое" : c.last.kind === "sticker" ? `Стикер ${c.last.text}` : c.last.text}
+                      </p>
+                    </div>
+                    {c.unread > 0 && <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5 font-bold shrink-0">{c.unread}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── ПРАВАЯ КОЛОНКА: сама переписка ── */}
+            <div className={`${chatPartnerId ? "flex" : "hidden lg:flex"} flex-1 min-w-0 h-full`}>
+              {chatPartnerId ? (
+                <div className="w-full h-full">
+                  <ChatWindow
+                    partner={users.find((u) => u.id === chatPartnerId)!}
+                    thread={activeThread}
+                    myId={currentUser.id}
+                    msgInput={msgInput}
+                    setMsgInput={setMsgInput}
+                    onSend={sendText}
+                    onSticker={sendSticker}
+                    isRecording={isRecording}
+                    startRecording={startRecording}
+                    stopRecording={stopRecording}
+                    onBack={() => setChatPartnerId(null)}
+                    onDelete={() => deleteChat(chatPartnerId)}
+                    onDeleteMessage={deleteMessage}
+                    onOpenProfile={() => setViewingProfileId(chatPartnerId)}
+                    partnerFollowers={followersCount(chatPartnerId)}
+                    chatEndRef={chatEndRef}
+                  />
+                </div>
+              ) : (
+                /* пусто — только на большом экране */
+                <div className="w-full h-full flex flex-col items-center justify-center bg-[#eef2f0] text-center px-6">
+                  <div className="text-6xl mb-3">💬</div>
+                  <p className="font-bold text-gray-700 text-lg">Выбери диалог слева</p>
+                  <p className="text-gray-500 text-sm mt-1">или найди друга по нику, например @yud1x</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {screen === "messages" && chatPartnerId && (
-          <div className="h-full flex justify-center">
-            <div className="w-full max-w-2xl h-full">
-              <ChatWindow
-                partner={users.find((u) => u.id === chatPartnerId)!}
-                thread={activeThread}
-                myId={currentUser.id}
-                msgInput={msgInput}
-                setMsgInput={setMsgInput}
-                onSend={sendText}
-                onSticker={sendSticker}
-                isRecording={isRecording}
-                startRecording={startRecording}
-                stopRecording={stopRecording}
-                onBack={() => setChatPartnerId(null)}
-                onDelete={() => deleteChat(chatPartnerId)}
-                onDeleteMessage={deleteMessage}
-                onOpenProfile={() => setViewingProfileId(chatPartnerId)}
-                partnerFollowers={followersCount(chatPartnerId)}
-                chatEndRef={chatEndRef}
-              />
-            </div>
-          </div>
-        )}
-
         {screen === "profile" && (
           <div className="h-full overflow-y-auto p-4 flex justify-center">
-            <div className="w-full max-w-xl space-y-4">
+            <div className="w-full max-w-3xl space-y-4">
               <div className="rounded-3xl bg-white border border-emerald-100 p-6 text-center shadow-lg">
                 <button onClick={() => setAvatarPicker(!avatarPicker)} className="inline-block active:scale-90 transition"><AvatarView user={currentUser} size={88} /></button>
                 {avatarPicker && (
@@ -2346,7 +2393,7 @@ export default function App() {
         )}
       </main>
 
-      <nav className="relative z-10 shrink-0 flex items-center justify-around bg-white/90 backdrop-blur-xl border-t border-emerald-100 py-2">
+      <nav className="relative z-10 shrink-0 flex lg:hidden items-center justify-around bg-white/90 backdrop-blur-xl border-t border-emerald-100 py-2">
         <span className="pointer-events-none absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-emerald-500 via-green-400 to-orange-500" />
         <NavBtn icon={<NavIcon name="home" />} label={t.home} active={screen === "home"} onClick={() => setScreen("home")} />
         <NavBtn icon={<NavIcon name="search" />} label={t.search} active={screen === "search"} onClick={() => setScreen("search")} />
@@ -2592,6 +2639,22 @@ function NavBtn({ icon, label, active, onClick, badge }: { icon: ReactNode; labe
   );
 }
 
+/** Кнопка верхнего меню — показывается только на большом экране (ноутбук). */
+function TopNavBtn({ icon, label, active, onClick, badge }: { icon: ReactNode; label: string; active: boolean; onClick: () => void; badge?: number; }) {
+  return (
+    <button onClick={onClick}
+      className={`relative flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition ${active
+        ? "bg-emerald-50 text-emerald-600"
+        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"}`}>
+      <span>{icon}</span>
+      <span>{label}</span>
+      {badge !== undefined && badge > 0 && (
+        <span className="bg-red-500 text-white rounded-full px-1.5 py-0.5 font-bold" style={{ fontSize: "10px" }}>{badge}</span>
+      )}
+    </button>
+  );
+}
+
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-2xl bg-white border border-gray-200 py-4">
@@ -2689,7 +2752,7 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 shrink-0">
-        <button onClick={onBack} className="text-xl">←</button>
+        <button onClick={onBack} className="text-xl lg:hidden px-1 active:scale-90 transition">←</button>
         <button onClick={onOpenProfile} className="active:scale-90 transition"><AvatarView user={partner} size={40} showOnline /></button>
         <button onClick={onOpenProfile} className="flex-1 min-w-0 text-left active:opacity-70 transition">
           <div className="font-bold truncate inline-flex items-center gap-1">{partner.nickname} <VerifyMark followers={partnerFollowers} nick={partner.nickname} size={14} /></div>
