@@ -32,7 +32,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
    РАЗДЕЛ 2. ТИПЫ ДАННЫХ
    ════════════════════════════════════════════════════════════════════════════ */
 
-type Screen = "home" | "search" | "add" | "favorites" | "profile" | "messages";
+type Screen = "home" | "search" | "add" | "favorites" | "profile" | "messages" | "admin";
 type AuthView = "welcome" | "login" | "register" | "verify" | "accounts";
 type Role = "seller" | "buyer";
 type SortMode = "new" | "asc" | "desc";
@@ -1132,7 +1132,6 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [follows, setFollows] = useState<Follow[]>([]);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null); // чей профиль смотрим
-  const [adminOpen, setAdminOpen] = useState(false);       // открыта ли панель админа (только создатель)
   const [adminSearch, setAdminSearch] = useState("");      // поиск по нику в админке
   const [followsListView, setFollowsListView] = useState<{ userId: string; mode: "followers" | "following" } | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -2206,11 +2205,26 @@ export default function App() {
 
           {authView === "welcome" && (
             <div className="space-y-3">
-              <button onClick={() => { setAuthView("login"); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-emerald-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">{t.login}</button>
-              <button onClick={() => { setAuthView("register"); setAuthStep(1); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gray-100 border border-emerald-300 font-bold text-lg active:scale-95 transition">{t.register}</button>
+              {/* Быстрый вход в сохранённые аккаунты */}
               {knownAccounts.length > 0 && (
-                <button onClick={() => setAuthView("accounts")} className="w-full py-3 rounded-2xl bg-gray-100 border border-gray-300 font-bold text-sm active:scale-95 transition">🔄 {t.myAccounts} ({knownAccounts.length})</button>
+                <div className="space-y-2 mb-2">
+                  <p className="text-gray-500 text-xs font-semibold px-1">Мои аккаунты на этом устройстве:</p>
+                  {knownAccounts.map((u) => (
+                    <button key={u.id} onClick={() => switchTo(u.id)}
+                      className="w-full flex items-center gap-3 p-2.5 rounded-2xl bg-gray-50 border border-gray-200 hover:border-emerald-300 active:scale-[0.98] transition text-left">
+                      <AvatarView user={u} size={40} showOnline />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold truncate">@{u.nickname}</div>
+                      </div>
+                      <span className="text-emerald-600 text-sm font-semibold shrink-0">Войти →</span>
+                    </button>
+                  ))}
+                  <div className="h-px bg-gray-200 my-1" />
+                </div>
               )}
+
+              <button onClick={() => { setAuthView("login"); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg shadow-md active:scale-95 transition">{t.login}</button>
+              <button onClick={() => { setAuthView("register"); setAuthStep(1); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gray-100 border border-emerald-300 hover:bg-gray-200 font-bold text-lg active:scale-95 transition">{t.register}</button>
             </div>
           )}
 
@@ -2566,7 +2580,7 @@ export default function App() {
 
               {/* ─── АДМИН-ПАНЕЛЬ (только создатель видит эту кнопку) ─── */}
               {iAmAdmin && (
-                <button onClick={() => setAdminOpen(true)}
+                <button onClick={() => setScreen("admin")}
                   className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-900 text-white shadow-md hover:scale-[1.01] active:scale-[0.99] transition text-left">
                   <span className="text-2xl">🛡️</span>
                   <div className="flex-1">
@@ -2629,6 +2643,68 @@ export default function App() {
             <div className="flex gap-2 p-3 border-t border-gray-200"><input value={botInput} onChange={(e) => setBotInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendBot()} placeholder={t.askBot} className="flex-1 px-3 py-2 rounded-xl bg-gray-100 border border-gray-300 outline-none text-sm" /><button onClick={() => sendBot()} className="px-3 rounded-xl bg-emerald-500 text-white font-bold">➤</button></div>
           </div>
         )}
+        {/* ═══ АДМИН-ПАНЕЛЬ — отдельный экран (только создатель) ═══ */}
+        {screen === "admin" && iAmAdmin && (
+          <div className="h-full flex flex-col bg-white">
+            {/* шапка */}
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-800 to-slate-900 text-white shrink-0">
+              <button onClick={() => setScreen("profile")} className="text-2xl px-1 active:scale-90 transition">←</button>
+              <span className="text-2xl">🛡️</span>
+              <div className="flex-1">
+                <div className="font-bold">Админ-панель</div>
+                <div className="text-white/70 text-xs">{users.length} аккаунтов · {products.length} товаров</div>
+              </div>
+            </div>
+
+            {/* поиск */}
+            <div className="p-3 border-b border-gray-200 shrink-0">
+              <input value={adminSearch} onChange={(e) => setAdminSearch(e.target.value)}
+                placeholder="🔍 Поиск по нику..."
+                autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                className="w-full max-w-2xl mx-auto block px-4 py-2.5 rounded-xl bg-gray-100 border border-gray-200 outline-none focus:border-emerald-500" />
+            </div>
+
+            {/* список аккаунтов */}
+            <div className="flex-1 overflow-y-auto p-2">
+              <div className="max-w-2xl mx-auto space-y-1">
+                {users
+                  .filter((u: User) => !adminSearch || (u.nickname || "").toLowerCase().includes(cleanNick(adminSearch).toLowerCase()))
+                  .sort((a: User, b: User) => (isCreator(b.nickname) ? 1 : 0) - (isCreator(a.nickname) ? 1 : 0))
+                  .map((u: User) => {
+                    const prodCount = products.filter((pr) => pr.sellerId === u.id).length;
+                    const me = u.id === myUserId;
+                    const creator = isCreator(u.nickname);
+                    return (
+                      <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200">
+                        <AvatarView user={u} size={44} />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold truncate flex items-center gap-1">
+                            @{u.nickname}
+                            {creator && <span title="Создатель">👑</span>}
+                            {me && <span className="text-xs text-gray-400">(ты)</span>}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">{u.email} · товаров: {prodCount}</div>
+                        </div>
+                        {creator || me ? (
+                          <span className="text-xs text-gray-400 px-3 shrink-0">защищён</span>
+                        ) : (
+                          <button onClick={() => adminDeleteUser(u)}
+                            className="px-3 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-bold shadow-sm active:scale-95 transition shrink-0">
+                            🗑️ Удалить
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            <div className="p-3 border-t border-gray-200 shrink-0 text-center text-xs text-gray-400">
+              Удаление аккаунта убирает его товары и переписку. Отменить нельзя.
+            </div>
+          </div>
+        )}
+
         </main>
       </div>
 
@@ -2825,68 +2901,6 @@ export default function App() {
         </div>
       )}
 
-        {/* ═══ АДМИН-ПАНЕЛЬ (модалка, только создатель) ═══ */}
-        {adminOpen && iAmAdmin && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setAdminOpen(false)}>
-            <div className="bg-white w-full sm:max-w-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-
-              {/* шапка */}
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-800 to-slate-900 text-white shrink-0">
-                <span className="text-2xl">🛡️</span>
-                <div className="flex-1">
-                  <div className="font-bold">Админ-панель</div>
-                  <div className="text-white/70 text-xs">{users.length} аккаунтов · {products.length} товаров</div>
-                </div>
-                <button onClick={() => setAdminOpen(false)} className="text-2xl px-1">✕</button>
-              </div>
-
-              {/* поиск */}
-              <div className="p-3 border-b border-gray-200 shrink-0">
-                <input value={adminSearch} onChange={(e) => setAdminSearch(e.target.value)}
-                  placeholder="🔍 Поиск по нику..."
-                  autoCapitalize="none" autoCorrect="off" spellCheck={false}
-                  className="w-full px-4 py-2.5 rounded-xl bg-gray-100 border border-gray-200 outline-none focus:border-emerald-500" />
-              </div>
-
-              {/* список аккаунтов */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                {users
-                  .filter((u: User) => !adminSearch || (u.nickname || "").toLowerCase().includes(cleanNick(adminSearch).toLowerCase()))
-                  .sort((a: User, b: User) => (isCreator(b.nickname) ? 1 : 0) - (isCreator(a.nickname) ? 1 : 0))
-                  .map((u: User) => {
-                    const prodCount = products.filter((p) => p.sellerId === u.id).length;
-                    const me = u.id === myUserId;
-                    const creator = isCreator(u.nickname);
-                    return (
-                      <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200">
-                        <AvatarView user={u} size={44} />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-bold truncate flex items-center gap-1">
-                            @{u.nickname}
-                            {creator && <span title="Создатель">👑</span>}
-                            {me && <span className="text-xs text-gray-400">(ты)</span>}
-                          </div>
-                          <div className="text-xs text-gray-500 truncate">{u.email} · товаров: {prodCount}</div>
-                        </div>
-                        {creator || me ? (
-                          <span className="text-xs text-gray-400 px-3">защищён</span>
-                        ) : (
-                          <button onClick={() => adminDeleteUser(u)}
-                            className="px-3 py-2 rounded-xl bg-red-500 text-white text-sm font-bold shadow-sm hover:bg-red-600 active:scale-95 transition shrink-0">
-                            🗑️ Удалить
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-
-              <div className="p-3 border-t border-gray-200 shrink-0 text-center text-xs text-gray-400">
-                Удаление аккаунта убирает его товары и переписку. Отменить нельзя.
-              </div>
-            </div>
-          </div>
-        )}
       {toast && <ToastView toast={toast} />}
     </div>
   );
