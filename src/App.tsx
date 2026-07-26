@@ -1456,23 +1456,34 @@ export default function App() {
       if (fresh.some((u) => (u.email || "").toLowerCase() === authEmail.trim().toLowerCase())) {
         setAuthErr("Этот email уже зарегистрирован! Войди вместо регистрации."); return;
       }
-      // Ник должен быть УНИКАЛЬНЫМ: один ник = один человек (как @username в Telegram)
-      if (isCreator(nick)) {
-        setAuthErr("Этот ник зарезервирован для создателя 👑"); return;
-      }
-      if (!nickIsFree(nick, fresh)) {
-        setAuthErr(`Ник @${nick} уже занят! Придумай другой.`); return;
-      }
-      setAuthNick(nick); // сохраняем «чистый» ник (без @ и лишних символов)
-      // Просим Supabase прислать код на почту
-      const { error } = await supabase.auth.signInWithOtp({
+      // Ник уникальный: один ник = один человек (как @username в Telegram)
+      if (isCreator(nick)) { setAuthErr("Этот ник зарезервирован для создателя 👑"); return; }
+      if (!nickIsFree(nick, fresh)) { setAuthErr(`Ник @${nick} уже занят! Придумай другой.`); return; }
+
+      // Создаём аккаунт сразу (без кода на почту — почта подключится позже через Supabase Auth)
+      const nu: User = {
+        id: makeUserId(fresh),
         email: authEmail.trim(),
-        options: { shouldCreateUser: true },
-      });
-      if (error) { setAuthErr("Не удалось отправить код: " + error.message); return; }
-      setAuthCode("");
-      setAuthView("verify");
-      showToast(`Код отправлен на ${authEmail.trim()} 📧`, "ok");
+        nickname: nick,
+        password: authPass,
+        role: "seller",
+        avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
+        avatarIsPhoto: false,
+        createdAt: Date.now(),
+        lastSeen: Date.now(),
+      };
+      const res = await apiInsertUser(nu);
+      if (!res.ok) { setAuthErr("Ошибка сервера: " + (res.err || "")); return; }
+
+      setUsers([...fresh, nu]);
+      setCurrentUser(nu);
+      session.set(nu.id);
+      rememberAccount(nu.id);
+      setFavorites([]);
+      setAuthView("welcome"); setAuthStep(1);
+      setAuthEmail(""); setAuthNick(""); setAuthPass(""); setAuthPass2("");
+      setScreen("home");
+      showToast(`✅ Добро пожаловать! Твой ник @${nu.nickname}`, "ok");
     } catch (e) {
       console.error("startRegister", e);
       setAuthErr("Ошибка сети. Попробуй ещё раз.");
@@ -2188,14 +2199,14 @@ export default function App() {
         <div className="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-xl border border-emerald-200 rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-7">
             <div className="text-6xl mb-2">⚡</div>
-            <h1 className="text-3xl font-black bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">IlmTech TJ</h1>
+            <h1 className="text-3xl font-black bg-emerald-500 bg-clip-text text-transparent">IlmTech TJ</h1>
             <p className="text-gray-500 text-sm mt-1">Маркетплейс Таджикистана</p>
             <p className="text-green-400 text-xs mt-1">{connected ? "🟢 Подключено к серверу" : "🔴 Нет связи"}</p>
           </div>
 
           {authView === "welcome" && (
             <div className="space-y-3">
-              <button onClick={() => { setAuthView("login"); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">{t.login}</button>
+              <button onClick={() => { setAuthView("login"); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-emerald-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">{t.login}</button>
               <button onClick={() => { setAuthView("register"); setAuthStep(1); setAuthErr(""); }} className="w-full py-4 rounded-2xl bg-gray-100 border border-emerald-300 font-bold text-lg active:scale-95 transition">{t.register}</button>
               {knownAccounts.length > 0 && (
                 <button onClick={() => setAuthView("accounts")} className="w-full py-3 rounded-2xl bg-gray-100 border border-gray-300 font-bold text-sm active:scale-95 transition">🔄 {t.myAccounts} ({knownAccounts.length})</button>
@@ -2228,7 +2239,7 @@ export default function App() {
               <input value={loginNick} onChange={(e) => setLoginNick(e.target.value)} placeholder={t.nickname} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               <input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} onKeyDown={(e) => e.key === "Enter" && doLogin()} placeholder={t.password} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
-              <button onClick={doLogin} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "..." : "Войти →"}</button>
+              <button onClick={doLogin} disabled={authBusy} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-md active:scale-95 transition disabled:opacity-60">{authBusy ? "..." : "Войти →"}</button>
               <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-gray-500 text-sm">{t.back}</button>
             </div>
           )}
@@ -2241,7 +2252,7 @@ export default function App() {
               <input type="password" value={authPass} onChange={(e) => setAuthPass(e.target.value)} placeholder={t.password} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               <input type="password" value={authPass2} onChange={(e) => setAuthPass2(e.target.value)} placeholder={t.passwordRepeat} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
-              <button onClick={startRegister} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "Отправляем код..." : "Получить код на почту →"}</button>
+              <button onClick={startRegister} disabled={authBusy} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-md active:scale-95 transition disabled:opacity-60">{authBusy ? "Создаём аккаунт..." : "Зарегистрироваться →"}</button>
               <button onClick={() => { setAuthView("welcome"); setAuthErr(""); }} className="w-full py-2 text-gray-500 text-sm">{t.back}</button>
             </div>
           )}
@@ -2260,7 +2271,7 @@ export default function App() {
                 className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500 text-center text-2xl tracking-[0.4em] font-bold"
               />
               {authErr && <p className="text-red-500 text-sm">{authErr}</p>}
-              <button onClick={confirmRegisterCode} disabled={authBusy} className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-lg active:scale-95 transition disabled:opacity-60">{authBusy ? "Проверяем..." : "Подтвердить ✓"}</button>
+              <button onClick={confirmRegisterCode} disabled={authBusy} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-md active:scale-95 transition disabled:opacity-60">{authBusy ? "Проверяем..." : "Подтвердить ✓"}</button>
               <div className="flex items-center justify-between text-sm">
                 <button onClick={() => { setAuthView("register"); setAuthErr(""); }} className="text-gray-500">← Назад</button>
                 <button onClick={resendCode} disabled={authBusy} className="text-emerald-600 font-semibold disabled:opacity-50">Отправить код заново</button>
@@ -2269,70 +2280,8 @@ export default function App() {
             </div>
           )}
         </div>
-        {/* ═══ АДМИН-ПАНЕЛЬ (модалка, только создатель) ═══ */}
-        {adminOpen && iAmAdmin && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setAdminOpen(false)}>
-            <div className="bg-white w-full sm:max-w-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
 
-              {/* шапка */}
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-800 to-slate-900 text-white shrink-0">
-                <span className="text-2xl">🛡️</span>
-                <div className="flex-1">
-                  <div className="font-bold">Админ-панель</div>
-                  <div className="text-white/70 text-xs">{users.length} аккаунтов · {products.length} товаров</div>
-                </div>
-                <button onClick={() => setAdminOpen(false)} className="text-2xl px-1">✕</button>
-              </div>
-
-              {/* поиск */}
-              <div className="p-3 border-b border-gray-200 shrink-0">
-                <input value={adminSearch} onChange={(e) => setAdminSearch(e.target.value)}
-                  placeholder="🔍 Поиск по нику..."
-                  autoCapitalize="none" autoCorrect="off" spellCheck={false}
-                  className="w-full px-4 py-2.5 rounded-xl bg-gray-100 border border-gray-200 outline-none focus:border-emerald-500" />
-              </div>
-
-              {/* список аккаунтов */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                {users
-                  .filter((u: User) => !adminSearch || (u.nickname || "").toLowerCase().includes(cleanNick(adminSearch).toLowerCase()))
-                  .sort((a: User, b: User) => (isCreator(b.nickname) ? 1 : 0) - (isCreator(a.nickname) ? 1 : 0))
-                  .map((u: User) => {
-                    const prodCount = products.filter((p) => p.sellerId === u.id).length;
-                    const me = u.id === myUserId;
-                    const creator = isCreator(u.nickname);
-                    return (
-                      <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200">
-                        <AvatarView user={u} size={44} />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-bold truncate flex items-center gap-1">
-                            @{u.nickname}
-                            {creator && <span title="Создатель">👑</span>}
-                            {me && <span className="text-xs text-gray-400">(ты)</span>}
-                          </div>
-                          <div className="text-xs text-gray-500 truncate">{u.email} · товаров: {prodCount}</div>
-                        </div>
-                        {creator || me ? (
-                          <span className="text-xs text-gray-400 px-3">защищён</span>
-                        ) : (
-                          <button onClick={() => adminDeleteUser(u)}
-                            className="px-3 py-2 rounded-xl bg-red-500 text-white text-sm font-bold shadow-sm hover:bg-red-600 active:scale-95 transition shrink-0">
-                            🗑️ Удалить
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-              </div>
-
-              <div className="p-3 border-t border-gray-200 shrink-0 text-center text-xs text-gray-400">
-                Удаление аккаунта убирает его товары и переписку. Отменить нельзя.
-              </div>
-            </div>
-          </div>
-        )}
-
-        {toast && <ToastView toast={toast} />}
+      {toast && <ToastView toast={toast} />}
       </div>
     );
   }
@@ -2350,7 +2299,7 @@ export default function App() {
       <header className="relative z-10 shrink-0 flex items-center justify-between px-4 py-3 bg-white/80 backdrop-blur-xl border-b border-emerald-100">
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-2xl">⚡</span>
-          <span className="font-black text-lg bg-gradient-to-r from-emerald-500 to-green-500 bg-clip-text text-transparent">IlmTech</span>
+          <span className="font-black text-lg bg-emerald-500 bg-clip-text text-transparent">IlmTech</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -2361,7 +2310,7 @@ export default function App() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none" /><path d="m16.5 9.5 5 5M21.5 9.5l-5 5" /></svg>
             )}
           </button>
-          {isSeller && <button onClick={() => setScreen("add")} className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm font-bold shadow-md active:scale-95 transition">➕ {t.post}</button>}
+          {isSeller && <button onClick={() => setScreen("add")} className="px-3 py-1.5 rounded-xl bg-emerald-500 text-white text-sm font-bold shadow-md active:scale-95 transition">➕ {t.post}</button>}
           <button onClick={() => setScreen("profile")} className="active:scale-90 transition"><AvatarView user={currentUser} size={34} /></button>
         </div>
       </header>
@@ -2393,7 +2342,7 @@ export default function App() {
              <StarField stars={starsRef.current} />
            </div>
            <div className="relative mx-auto w-full max-w-[1700px] space-y-4">
-            <div className="rounded-3xl bg-gradient-to-r from-emerald-500 to-green-500 text-white p-5 sm:p-6 shadow-xl relative overflow-hidden">
+            <div className="rounded-3xl bg-emerald-500 text-white p-5 sm:p-6 shadow-xl relative overflow-hidden">
               <div className="absolute -right-4 -top-4 text-7xl opacity-20">⚡</div>
               <h2 className="text-2xl font-black leading-tight relative">{t.homeBanner1}</h2>
               <p className="text-gray-900/80 relative">{t.homeBanner2}</p>
@@ -2452,7 +2401,7 @@ export default function App() {
               <select value={npCity} onChange={(e) => setNpCity(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none">{CITIES.map((c) => <option key={c}>{c}</option>)}</select>
               <input value={npPhone} onChange={(e) => setNpPhone(e.target.value)} placeholder={t.phone} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               <textarea value={npDesc} onChange={(e) => setNpDesc(e.target.value)} placeholder={t.description} rows={3} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-              <button onClick={publishProduct} className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">{t.publish}</button>
+              <button onClick={publishProduct} className="w-full py-4 rounded-2xl bg-emerald-500 text-white font-bold text-lg shadow-lg active:scale-95 transition">{t.publish}</button>
             </div>
           </div>
         )}
@@ -2481,7 +2430,7 @@ export default function App() {
                     autoCapitalize="none" autoCorrect="off" spellCheck={false}
                     className="flex-1 min-w-0 px-4 py-2.5 rounded-full bg-gray-100 border border-gray-200 outline-none focus:border-emerald-500" />
                   <button onClick={findUserByNick}
-                    className="px-4 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md shrink-0 active:scale-95 transition">{t.findBtn}</button>
+                    className="px-4 rounded-full bg-emerald-500 text-white font-bold shadow-md shrink-0 active:scale-95 transition">{t.findBtn}</button>
                 </div>
                 <p className="text-xs text-gray-400">
                   Твой ник: <b className="text-emerald-600">@{currentUser.nickname}</b> — дай его другу, чтобы он тебя нашёл.
@@ -2560,7 +2509,7 @@ export default function App() {
                     <div className="grid grid-cols-5 gap-2">
                       {AVATARS.map((a) => <button key={a} onClick={() => changeAvatar(a)} className="text-3xl p-2 rounded-xl bg-gray-100 active:scale-90">{a}</button>)}
                     </div>
-                    <label className="block w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 font-bold cursor-pointer active:scale-95 transition">
+                    <label className="block w-full py-3 rounded-xl bg-emerald-500 font-bold cursor-pointer active:scale-95 transition">
                       📷 Загрузить фото
                       <input type="file" accept="image/*" className="hidden" onChange={handleAvatarPhoto} />
                     </label>
@@ -2609,7 +2558,7 @@ export default function App() {
                     className="flex-1 px-4 py-2.5 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500"
                   />
                   <button onClick={findUserByNick}
-                    className="px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md active:scale-95 transition">
+                    className="px-5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-md active:scale-95 transition">
                     {t.findBtn}
                   </button>
                 </div>
@@ -2669,15 +2618,15 @@ export default function App() {
         )}
 
         {!botOpen && screen !== "messages" && (
-          <button onClick={() => setBotOpen(true)} className="absolute bottom-4 right-4 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-2xl shadow-lg animate-bounce">🤖</button>
+          <button onClick={() => setBotOpen(true)} className="absolute bottom-4 right-4 w-14 h-14 rounded-full bg-emerald-500 text-2xl shadow-lg animate-bounce">🤖</button>
         )}
 
         {botOpen && (
           <div className="absolute bottom-3 right-3 flex flex-col bg-white border border-emerald-300 rounded-2xl overflow-hidden shadow-2xl" style={{ width: "min(360px, calc(100% - 24px))", height: "min(72%, 540px)" }}>
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-500"><span className="font-bold">🤖 {t.bot}</span><button onClick={() => setBotOpen(false)} className="text-xl">✕</button></div>
+            <div className="flex items-center justify-between px-4 py-3 bg-emerald-500"><span className="font-bold">🤖 {t.bot}</span><button onClick={() => setBotOpen(false)} className="text-xl">✕</button></div>
             <div className="flex-1 overflow-y-auto p-3 space-y-2">{botMsgs.map((m, i) => <div key={i} className={`flex ${m.from === "user" ? "justify-end" : "justify-start"}`}><div className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-line ${m.from === "user" ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-900"}`} style={{ maxWidth: "82%" }}>{m.text}</div></div>)}<div ref={botEndRef} /></div>
             <div className="px-3 pb-2 flex flex-wrap gap-1">{BOT_QUICK.map((q) => <button key={q} onClick={() => sendBot(q)} className="text-xs px-2 py-1 rounded-lg bg-gray-100 border border-gray-300">{q}</button>)}</div>
-            <div className="flex gap-2 p-3 border-t border-gray-200"><input value={botInput} onChange={(e) => setBotInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendBot()} placeholder={t.askBot} className="flex-1 px-3 py-2 rounded-xl bg-gray-100 border border-gray-300 outline-none text-sm" /><button onClick={() => sendBot()} className="px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold">➤</button></div>
+            <div className="flex gap-2 p-3 border-t border-gray-200"><input value={botInput} onChange={(e) => setBotInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendBot()} placeholder={t.askBot} className="flex-1 px-3 py-2 rounded-xl bg-gray-100 border border-gray-300 outline-none text-sm" /><button onClick={() => sendBot()} className="px-3 rounded-xl bg-emerald-500 text-white font-bold">➤</button></div>
           </div>
         )}
         </main>
@@ -2720,7 +2669,7 @@ export default function App() {
             <div className="grid grid-cols-3 gap-2">
               {CATEGORIES.map((c) => (
                 <button key={c.key} onClick={() => { setCategory(c.key); setAllCatsOpen(false); }}
-                  className={`flex flex-col items-center justify-center py-4 rounded-xl border-2 transition active:scale-95 ${category === c.key ? "bg-gradient-to-br from-emerald-500 to-green-500 text-white border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"}`}>
+                  className={`flex flex-col items-center justify-center py-4 rounded-xl border-2 transition active:scale-95 ${category === c.key ? "bg-emerald-500 text-white border-emerald-500 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"}`}>
                   <span className={`mb-1 ${category === c.key ? "text-white" : "text-emerald-600"}`}><CategoryIcon name={c.key} size={30} /></span>
                   <span className="text-xs font-semibold">{c.key}</span>
                 </button>
@@ -2766,7 +2715,7 @@ export default function App() {
                   <div className="mt-5 grid grid-cols-2 gap-2">
                     <button
                       onClick={() => toggleFollow(target.id)}
-                      className={`py-3 rounded-xl font-bold shadow-md active:scale-95 transition ${following ? "bg-gray-200 text-gray-700 border border-gray-300" : "bg-gradient-to-r from-emerald-500 to-green-500 text-white"}`}
+                      className={`py-3 rounded-xl font-bold shadow-md active:scale-95 transition ${following ? "bg-gray-200 text-gray-700 border border-gray-300" : "bg-emerald-500 text-white"}`}
                     >
                       {following ? t.unfollow : t.follow}
                     </button>
@@ -2876,6 +2825,68 @@ export default function App() {
         </div>
       )}
 
+        {/* ═══ АДМИН-ПАНЕЛЬ (модалка, только создатель) ═══ */}
+        {adminOpen && iAmAdmin && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setAdminOpen(false)}>
+            <div className="bg-white w-full sm:max-w-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+
+              {/* шапка */}
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-800 to-slate-900 text-white shrink-0">
+                <span className="text-2xl">🛡️</span>
+                <div className="flex-1">
+                  <div className="font-bold">Админ-панель</div>
+                  <div className="text-white/70 text-xs">{users.length} аккаунтов · {products.length} товаров</div>
+                </div>
+                <button onClick={() => setAdminOpen(false)} className="text-2xl px-1">✕</button>
+              </div>
+
+              {/* поиск */}
+              <div className="p-3 border-b border-gray-200 shrink-0">
+                <input value={adminSearch} onChange={(e) => setAdminSearch(e.target.value)}
+                  placeholder="🔍 Поиск по нику..."
+                  autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                  className="w-full px-4 py-2.5 rounded-xl bg-gray-100 border border-gray-200 outline-none focus:border-emerald-500" />
+              </div>
+
+              {/* список аккаунтов */}
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                {users
+                  .filter((u: User) => !adminSearch || (u.nickname || "").toLowerCase().includes(cleanNick(adminSearch).toLowerCase()))
+                  .sort((a: User, b: User) => (isCreator(b.nickname) ? 1 : 0) - (isCreator(a.nickname) ? 1 : 0))
+                  .map((u: User) => {
+                    const prodCount = products.filter((p) => p.sellerId === u.id).length;
+                    const me = u.id === myUserId;
+                    const creator = isCreator(u.nickname);
+                    return (
+                      <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200">
+                        <AvatarView user={u} size={44} />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold truncate flex items-center gap-1">
+                            @{u.nickname}
+                            {creator && <span title="Создатель">👑</span>}
+                            {me && <span className="text-xs text-gray-400">(ты)</span>}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">{u.email} · товаров: {prodCount}</div>
+                        </div>
+                        {creator || me ? (
+                          <span className="text-xs text-gray-400 px-3">защищён</span>
+                        ) : (
+                          <button onClick={() => adminDeleteUser(u)}
+                            className="px-3 py-2 rounded-xl bg-red-500 text-white text-sm font-bold shadow-sm hover:bg-red-600 active:scale-95 transition shrink-0">
+                            🗑️ Удалить
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+
+              <div className="p-3 border-t border-gray-200 shrink-0 text-center text-xs text-gray-400">
+                Удаление аккаунта убирает его товары и переписку. Отменить нельзя.
+              </div>
+            </div>
+          </div>
+        )}
       {toast && <ToastView toast={toast} />}
     </div>
   );
@@ -3007,7 +3018,7 @@ function SideNavBtn({ icon, label, active, onClick, badge }: { icon: ReactNode; 
   return (
     <button onClick={onClick}
       className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-[15px] transition-all ${active
-        ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md shadow-emerald-500/25"
+        ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/25"
         : "text-gray-500 hover:bg-emerald-50 hover:text-emerald-600"}`}>
       <span className="shrink-0">{icon}</span>
       <span className="truncate">{label}</span>
@@ -3076,7 +3087,7 @@ function ProductModal({ p, fav, mine, commentText, setCommentText, onAddComment,
           {!mine ? (
             <div className="grid grid-cols-2 gap-2">
               <a href={`tel:${p.phone.replace(/\s/g, "")}`} className="py-3 rounded-xl bg-green-500 text-white font-bold text-center active:scale-95 transition">📞 Позвонить</a>
-              <button onClick={onWrite} className="py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold shadow-md active:scale-95 transition">💬 Написать</button>
+              <button onClick={onWrite} className="py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-md active:scale-95 transition">💬 Написать</button>
             </div>
           ) : (
             <div className="space-y-2">
@@ -3162,7 +3173,7 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
               {!mine && <div className="shrink-0"><AvatarView user={partner} size={28} /></div>}
               <div onContextMenu={handleLongPress}
                 className={`px-3 py-1.5 shadow-sm break-words whitespace-pre-wrap ${mine
-                  ? "bg-gradient-to-br from-emerald-500 to-green-500 text-white rounded-2xl rounded-br-md"
+                  ? "bg-emerald-500 text-white rounded-2xl rounded-br-md"
                   : "ilm-bubble-in rounded-2xl rounded-bl-md"}`}
                 style={{ maxWidth: "78%" }}>
                 {m.kind === "voice"
@@ -3194,7 +3205,7 @@ function ChatWindow({ partner, thread, myId, msgInput, setMsgInput, onSend, onSt
         <button onClick={() => setStickersOpen(!stickersOpen)} className="text-2xl w-10 h-10 rounded-full hover:bg-gray-100 transition shrink-0">😀</button>
         <input value={msgInput} onChange={(e) => setMsgInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onSend()} onFocus={() => setStickersOpen(false)} placeholder="Сообщение..." className="flex-1 px-4 py-2.5 rounded-full bg-gray-100 border border-gray-200 outline-none focus:border-emerald-400" />
         {msgInput.trim() ? (
-          <button onClick={onSend} className="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 text-white font-bold text-lg flex items-center justify-center shadow-md shrink-0 active:scale-90 transition">➤</button>
+          <button onClick={onSend} className="w-11 h-11 rounded-full bg-emerald-500 text-white font-bold text-lg flex items-center justify-center shadow-md shrink-0 active:scale-90 transition">➤</button>
         ) : (
           <button onMouseDown={startRecording} onMouseUp={stopRecording} onMouseLeave={() => isRecording && stopRecording()} onTouchStart={(e) => { e.preventDefault(); startRecording(); }} onTouchEnd={(e) => { e.preventDefault(); stopRecording(); }} className={`w-11 h-11 rounded-full flex items-center justify-center text-lg shrink-0 transition ${isRecording ? "bg-red-600 animate-pulse scale-110" : "bg-gray-200 hover:bg-gray-300"}`}>🎤</button>
         )}
