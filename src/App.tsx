@@ -419,6 +419,20 @@ async function apiDeleteProduct(productId: string): Promise<void> {
   await supabase.from("ilm_products").delete().eq("id", productId);
 }
 
+/** Удалить пользователя целиком: его аккаунт, все товары и переписку.
+ *  productIds — id товаров этого пользователя (продавец хранится внутри JSONB,
+ *  поэтому список готовим заранее в коде). Только для создателя сайта. */
+async function apiDeleteUserFully(userId: string, productIds: string[]): Promise<void> {
+  for (const pid of productIds) {
+    await supabase.from("ilm_products").delete().eq("id", pid);
+  }
+  await supabase.from("ilm_messages").delete().eq("from_id", userId);
+  await supabase.from("ilm_messages").delete().eq("to_id", userId);
+  await supabase.from("ilm_follows").delete().eq("follower_id", userId);
+  await supabase.from("ilm_follows").delete().eq("following_id", userId);
+  await supabase.from("ilm_users").delete().eq("id", userId);
+}
+
 /** Загрузить все сообщения */
 async function apiLoadMessages(): Promise<Message[]> {
   const { data, error } = await supabase.from("ilm_messages").select("*").order("ts", { ascending: true });
@@ -1118,6 +1132,8 @@ export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [follows, setFollows] = useState<Follow[]>([]);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null); // чей профиль смотрим
+  const [adminOpen, setAdminOpen] = useState(false);       // открыта ли панель админа (только создатель)
+  const [adminSearch, setAdminSearch] = useState("");      // поиск по нику в админке
   const [followsListView, setFollowsListView] = useState<{ userId: string; mode: "followers" | "following" } | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -1162,9 +1178,7 @@ export default function App() {
   const [npDesc, setNpDesc] = useState("");
   const [npPhone, setNpPhone] = useState("");
   const [npImages, setNpImages] = useState<string[]>([]);
-  const [npCond, setNpCond] = useState<"new" | "used">("used"); // по умолчанию Б/У
-  const [condFilter, setCondFilter] = useState<"all" | "used" | "new">("all"); // фильтр на главной
-  const [theme, setTheme] = useState<Theme>(() => {
+    const [theme, setTheme] = useState<Theme>(() => {
     const saved = local.get<string>("ilm_theme", "light");
     return saved === "night" || saved === "classic" ? saved : "light";
   });
@@ -1686,12 +1700,12 @@ export default function App() {
       createdAt: Date.now(),
       badge: null,
       comments: [],
-      condition: npCond,
+      condition: "used", // IlmTech — только Б/У
     };
     await apiInsertProduct(np);
     setProducts((prev) => [np, ...prev]);
     setNpTitle(""); setNpPrice(""); setNpDesc(""); setNpPhone(""); setNpImages([]);
-    setNpCat("Электроника"); setNpCity("Душанбе"); setNpCond("used");
+    setNpCat("Электроника"); setNpCity("Душанбе");
     setScreen("home");
     showToast("Объявление опубликовано! ⚡", "ok");
   };
@@ -1852,6 +1866,43 @@ export default function App() {
    * Найти человека по нику (как в Telegram: @yud1x).
    * Ник можно вводить с @ или без, регистр не важен.
    */
+  /* ══════════════════════════════════════════════════════════════════
+     АДМИН-ПАНЕЛЬ — только для создателя сайта (yud1x / osimsadulloev8).
+     Позволяет удалять плохие аккаунты вместе с их товарами.
+     ══════════════════════════════════════════════════════════════════ */
+
+  /** Я — создатель сайта? (есть доступ к админке) */
+  const iAmAdmin = !!currentUser && isCreator(currentUser.nickname);
+  const myUserId: string = currentUser ? currentUser.id : "";
+
+  /** Удалить чужой аккаунт целиком (аккаунт + товары + переписка). */
+  const adminDeleteUser = async (target: User) => {
+    if (!iAmAdmin) return;                                   // защита: только создатель
+    if (isCreator(target.nickname)) { showToast("Аккаунт создателя удалить нельзя 👑", "err"); return; }
+    if (target.id === currentUser?.id) { showToast("Себя удалить нельзя 🙂", "err"); return; }
+
+    const theirProducts = products.filter((p) => p.sellerId === target.id);
+    if (!window.confirm(
+      `Удалить аккаунт @${target.nickname}?\n\n` +
+      `• товаров будет удалено: ${theirProducts.length}\n` +
+      `• вся его переписка тоже удалится\n\n` +
+      `Это НЕЛЬЗЯ отменить.`
+    )) return;
+
+    // убираем из экрана сразу
+    setUsers((prev) => prev.filter((u) => u.id !== target.id));
+    setProducts((prev) => prev.filter((p) => p.sellerId !== target.id));
+
+    try {
+      await apiDeleteUserFully(target.id, theirProducts.map((p) => p.id));
+      showToast(`Аккаунт @${target.nickname} удалён`, "ok");
+    } catch {
+      showToast("Ошибка при удалении, попробуй ещё раз", "err");
+      setUsers(await apiLoadUsers());
+      setProducts(await apiLoadProducts());
+    }
+  };
+
   const findUserByNick = () => {
     const nick = cleanNick(findId).toLowerCase();
     if (!nick) { showToast("Введи ник друга, например @yud1x", "info"); return; }
@@ -2018,13 +2069,11 @@ export default function App() {
   ════════════════════════════════════════════════════════════════════════ */
   const homeProducts = useMemo(() => {
     let list = category === "Все" ? [...products] : products.filter((p) => p.category === category);
-    if (condFilter === "used") list = list.filter((p) => (p.condition || "used") === "used");
-    else if (condFilter === "new") list = list.filter((p) => p.condition === "new");
     if (sortMode === "asc") list.sort((a, b) => a.price - b.price);
     else if (sortMode === "desc") list.sort((a, b) => b.price - a.price);
     else list.sort((a, b) => b.createdAt - a.createdAt);
     return list;
-  }, [products, category, sortMode, condFilter]);
+  }, [products, category, sortMode]);
 
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -2220,6 +2269,69 @@ export default function App() {
             </div>
           )}
         </div>
+        {/* ═══ АДМИН-ПАНЕЛЬ (модалка, только создатель) ═══ */}
+        {adminOpen && iAmAdmin && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setAdminOpen(false)}>
+            <div className="bg-white w-full sm:max-w-2xl sm:rounded-2xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+
+              {/* шапка */}
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-slate-800 to-slate-900 text-white shrink-0">
+                <span className="text-2xl">🛡️</span>
+                <div className="flex-1">
+                  <div className="font-bold">Админ-панель</div>
+                  <div className="text-white/70 text-xs">{users.length} аккаунтов · {products.length} товаров</div>
+                </div>
+                <button onClick={() => setAdminOpen(false)} className="text-2xl px-1">✕</button>
+              </div>
+
+              {/* поиск */}
+              <div className="p-3 border-b border-gray-200 shrink-0">
+                <input value={adminSearch} onChange={(e) => setAdminSearch(e.target.value)}
+                  placeholder="🔍 Поиск по нику..."
+                  autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                  className="w-full px-4 py-2.5 rounded-xl bg-gray-100 border border-gray-200 outline-none focus:border-emerald-500" />
+              </div>
+
+              {/* список аккаунтов */}
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                {users
+                  .filter((u: User) => !adminSearch || (u.nickname || "").toLowerCase().includes(cleanNick(adminSearch).toLowerCase()))
+                  .sort((a: User, b: User) => (isCreator(b.nickname) ? 1 : 0) - (isCreator(a.nickname) ? 1 : 0))
+                  .map((u: User) => {
+                    const prodCount = products.filter((p) => p.sellerId === u.id).length;
+                    const me = u.id === myUserId;
+                    const creator = isCreator(u.nickname);
+                    return (
+                      <div key={u.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200">
+                        <AvatarView user={u} size={44} />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold truncate flex items-center gap-1">
+                            @{u.nickname}
+                            {creator && <span title="Создатель">👑</span>}
+                            {me && <span className="text-xs text-gray-400">(ты)</span>}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">{u.email} · товаров: {prodCount}</div>
+                        </div>
+                        {creator || me ? (
+                          <span className="text-xs text-gray-400 px-3">защищён</span>
+                        ) : (
+                          <button onClick={() => adminDeleteUser(u)}
+                            className="px-3 py-2 rounded-xl bg-red-500 text-white text-sm font-bold shadow-sm hover:bg-red-600 active:scale-95 transition shrink-0">
+                            🗑️ Удалить
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+
+              <div className="p-3 border-t border-gray-200 shrink-0 text-center text-xs text-gray-400">
+                Удаление аккаунта убирает его товары и переписку. Отменить нельзя.
+              </div>
+            </div>
+          </div>
+        )}
+
         {toast && <ToastView toast={toast} />}
       </div>
     );
@@ -2289,27 +2401,7 @@ export default function App() {
 
             {/* Категории: компактные карточки фиксированной высоты.
                 Чем шире экран — тем больше колонок (чтобы кнопки не раздувались). */}
-            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2">
-              {CATEGORIES.slice(0, 11).map((c) => (
-                <button key={c.key} onClick={() => setCategory(c.key)}
-                  className={`h-[74px] flex flex-col items-center justify-center gap-1 rounded-xl border font-medium transition hover:scale-[1.04] active:scale-95 ${category === c.key ? "bg-gradient-to-br from-emerald-500 to-green-500 text-white border-emerald-400 shadow-md" : "bg-white border-gray-200 hover:border-emerald-300"}`}>
-                  <span className={category === c.key ? "text-white" : "text-emerald-600"}><CategoryIcon name={c.key} size={22} /></span>
-                  <span className="leading-tight text-center px-1 truncate w-full" style={{ fontSize: "10px" }}>{c.key}</span>
-                </button>
-              ))}
-              <button onClick={() => setAllCatsOpen(true)}
-                className="h-[74px] flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50 text-emerald-700 font-medium hover:scale-[1.04] active:scale-95 transition">
-                <span className="text-lg leading-none">➕</span>
-                <span className="leading-tight" style={{ fontSize: "10px" }}>{t.more}</span>
-              </button>
-            </div>
-
-            <div className="flex gap-2 bg-gray-100 p-1 rounded-2xl">
-              {([["all", "🛍️ Все"], ["used", "♻️ Б/У"], ["new", "✨ Новые"]] as const).map(([key, label]) => (
-                <button key={key} onClick={() => setCondFilter(key)}
-                  className={`flex-1 py-2 rounded-xl text-sm font-bold transition active:scale-95 ${condFilter === key ? "bg-white text-emerald-600 shadow" : "text-gray-500"}`}>{label}</button>
-              ))}
-            </div>
+            
 
             <div className="flex items-center justify-between">
               <span className="text-gray-500 text-sm">{homeProducts.length} {t.adsCount}</span>
@@ -2355,10 +2447,7 @@ export default function App() {
               </div>
               <input value={npTitle} onChange={(e) => setNpTitle(e.target.value)} placeholder={t.title} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
               <input value={npPrice} onChange={(e) => setNpPrice(e.target.value)} inputMode="numeric" placeholder={t.price} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setNpCond("used")} className={`flex-1 py-3 rounded-xl border font-bold transition active:scale-95 ${npCond === "used" ? "bg-emerald-500 text-white border-emerald-500" : "bg-gray-100 border-gray-300 text-gray-500"}`}>♻️ Б/У</button>
-                <button type="button" onClick={() => setNpCond("new")} className={`flex-1 py-3 rounded-xl border font-bold transition active:scale-95 ${npCond === "new" ? "bg-orange-500 text-white border-orange-500" : "bg-gray-100 border-gray-300 text-gray-500"}`}>✨ Новое</button>
-              </div>
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-700 flex items-center gap-2"><span className="text-lg">♻️</span><span>IlmTech — площадка для вещей <b>Б/У</b>. Все объявления публикуются как бывшие в употреблении.</span></div>
               <select value={npCat} onChange={(e) => setNpCat(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none">{CATEGORIES.filter((c) => c.key !== "Все").map((c) => <option key={c.key}>{c.key}</option>)}</select>
               <select value={npCity} onChange={(e) => setNpCity(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none">{CITIES.map((c) => <option key={c}>{c}</option>)}</select>
               <input value={npPhone} onChange={(e) => setNpPhone(e.target.value)} placeholder={t.phone} className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-gray-300 outline-none focus:border-emerald-500" />
@@ -2525,6 +2614,19 @@ export default function App() {
                   </button>
                 </div>
               </div>
+
+              {/* ─── АДМИН-ПАНЕЛЬ (только создатель видит эту кнопку) ─── */}
+              {iAmAdmin && (
+                <button onClick={() => setAdminOpen(true)}
+                  className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-900 text-white shadow-md hover:scale-[1.01] active:scale-[0.99] transition text-left">
+                  <span className="text-2xl">🛡️</span>
+                  <div className="flex-1">
+                    <div className="font-bold">Админ-панель</div>
+                    <div className="text-white/70 text-xs">Управление аккаунтами и товарами — только для тебя</div>
+                  </div>
+                  <span className="text-white/60">→</span>
+                </button>
+              )}
 
               <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4"><h3 className="font-bold mb-1">🤝 Как проходят сделки на IlmTech</h3><p className="text-sm text-gray-700">Без оплаты в приложении и без комиссий. Покупатель пишет продавцу 💬, договаривается, встречаетесь лично и платите наличными.</p></div>
 
@@ -2934,8 +3036,7 @@ function ProductCard({ p, fav, mine, onOpen, onFav }: { p: Product; fav: boolean
         {p.images.length > 0 ? <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" /> : <span className="text-5xl">{emoji}</span>}
         {mine ? <span className="absolute top-1 left-1 bg-blue-500 text-white px-1.5 py-0.5 rounded font-bold" style={{ fontSize: "9px" }}>Моё</span> : p.badge ? <span className={`absolute top-1 left-1 px-1.5 py-0.5 rounded font-bold ${p.badge === "VIP" ? "bg-amber-400 text-gray-900" : "bg-red-500 text-white"}`} style={{ fontSize: "9px" }}>{p.badge}</span> : null}
         <button onClick={(e) => { e.stopPropagation(); onFav(); }} className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">{fav ? "❤️" : "🤍"}</button>
-        {p.condition === "new" && <span className="absolute bottom-1 left-1 bg-orange-500 text-white px-1.5 py-0.5 rounded font-bold" style={{ fontSize: "9px" }}>✨ Новое</span>}
-      </div>
+              </div>
       <div className="p-2">
         <div className="font-black text-emerald-600">{fmtPrice(p.price)} TJS</div>
         <div className="text-sm truncate">{p.title}</div>
