@@ -1,25 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, Fragment, type ReactNode } from "react";
 import { createClient, RealtimeChannel } from "@supabase/supabase-js";
 
-/* ══════════════════════════════════════════════════════════════════════════════════════
-   ███ IlmTech ███ — Маркетплейс Таджикистана (аналог Somon.tj)
-   ──────────────────────────────────────────────────────────────────────────────────────
-   Школьный проект. React + TypeScript + Tailwind + Supabase.
 
-   ★ ОБЩЕЕ ХРАНИЛИЩЕ В ИНТЕРНЕТЕ (Supabase) ★
-     Пользователи, товары и сообщения синхронизируются между разными
-     ноутбуками в реальном времени. Можно открыть с своего ноутбука и
-     с ноутбука брата — увидите данные друг друга и сможете переписываться.
-
-   Запуск:
-     1) В терминале VS Code один раз:  npm install @supabase/supabase-js
-     2) npm run dev
-     3) Открыть http://localhost:5173
-   ══════════════════════════════════════════════════════════════════════════════════════ */
-
-/* ════════════════════════════════════════════════════════════════════════════
-   РАЗДЕЛ 1. ПОДКЛЮЧЕНИЕ К SUPABASE (общий сервер)
-   ════════════════════════════════════════════════════════════════════════════ */
 
 const SUPABASE_URL = "https://dyevvtzjuanzptzdgymf.supabase.co";
 const SUPABASE_KEY = "sb_publishable_yA0dpEk61vGM_cdbPZRcfg_zEfc9rfq";
@@ -28,9 +10,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   realtime: { params: { eventsPerSecond: 10 } },
 });
 
-/* ════════════════════════════════════════════════════════════════════════════
-   РАЗДЕЛ 2. ТИПЫ ДАННЫХ
-   ════════════════════════════════════════════════════════════════════════════ */
 
 type Screen = "home" | "search" | "add" | "favorites" | "profile" | "messages" | "admin";
 type AuthView = "welcome" | "login" | "register" | "verify" | "accounts";
